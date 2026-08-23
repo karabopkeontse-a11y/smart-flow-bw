@@ -1,4 +1,4 @@
-name: Build Android APK
+name: Build Smart Flow BW Android APK
 on:
   push:
     branches: [main]
@@ -15,10 +15,17 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.10.2'
-      - name: Build APK
+      - name: Build debug APK
         working-directory: android
         run: gradle :app:assembleDebug
+      - name: Prepare downloadable package
+        run: |
+          mkdir -p release
+          cp android/app/build/outputs/apk/debug/app-debug.apk release/Smart-Flow-BW-Thothi-debug.apk
+          cp README.md release/README.md
+          cd release
+          zip -9 Smart-Flow-BW-Thothi-Package.zip Smart-Flow-BW-Thothi-debug.apk README.md
       - uses: actions/upload-artifact@v4
         with:
-          name: Smart-Flow-BW-Android-App
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          name: Smart-Flow-BW-Thothi-App-Package
+          path: release/
