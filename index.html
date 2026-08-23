@@ -10,7 +10,6 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet" />
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
 body { font-family:'DM Sans',sans-serif; background:#f3f7fb; color:#1a1a1a; line-height:1.6; }
@@ -115,7 +114,8 @@ body { font-family:'DM Sans',sans-serif; background:#f3f7fb; color:#1a1a1a; line
   letter-spacing:0.5px;
 }
 
-.form-group input {
+.form-group input,
+.form-group select {
   width:100%;
   padding:12px 16px;
   border:1px solid var(--line);
@@ -125,7 +125,8 @@ body { font-family:'DM Sans',sans-serif; background:#f3f7fb; color:#1a1a1a; line
   transition:all 0.3s;
 }
 
-.form-group input:focus {
+.form-group input:focus,
+.form-group select:focus {
   outline:none;
   border-color:var(--blue);
   box-shadow:0 0 0 3px rgba(11,107,203,.1);
@@ -164,16 +165,18 @@ body { font-family:'DM Sans',sans-serif; background:#f3f7fb; color:#1a1a1a; line
   color:var(--muted);
 }
 
-.auth-toggle a {
+.auth-toggle button {
   color:var(--blue);
   cursor:pointer;
   font-weight:600;
   text-decoration:none;
   border:none;
   background:none;
+  font-family:inherit;
+  font-size:14px;
 }
 
-.auth-toggle a:hover {
+.auth-toggle button:hover {
   text-decoration:underline;
 }
 
@@ -199,6 +202,21 @@ body { font-family:'DM Sans',sans-serif; background:#f3f7fb; color:#1a1a1a; line
 }
 
 .error-message.show {
+  display:block;
+}
+
+.success-message {
+  background:#efe;
+  border-left:4px solid var(--green);
+  padding:12px 16px;
+  margin-bottom:16px;
+  border-radius:4px;
+  font-size:13px;
+  color:var(--green);
+  display:none;
+}
+
+.success-message.show {
   display:block;
 }
 
@@ -276,6 +294,7 @@ header {
 .user-name {
   display:block;
   font-weight:600;
+  font-size:14px;
 }
 
 .user-status {
@@ -544,6 +563,7 @@ main {
   transition:all 0.3s;
   z-index:150;
   pointer-events:none;
+  max-width:400px;
 }
 
 .toast.show {
@@ -562,44 +582,6 @@ main {
 
 .toast.warning {
   background:var(--amber);
-}
-
-/* ===== LOADING ===== */
-.loading {
-  display:inline-block;
-  width:4px;
-  height:4px;
-  background:currentColor;
-  border-radius:50%;
-  opacity:0;
-  animation:pulse 1.5s ease-in-out infinite;
-}
-
-.loading:nth-child(2) {
-  animation-delay:0.2s;
-}
-
-.loading:nth-child(3) {
-  animation-delay:0.4s;
-}
-
-@keyframes pulse {
-  0%, 100% { opacity:0; }
-  50% { opacity:1; }
-}
-
-.spinner {
-  display:inline-block;
-  width:20px;
-  height:20px;
-  border:3px solid rgba(11,107,203,.2);
-  border-top-color:var(--blue);
-  border-radius:50%;
-  animation:spin 0.8s linear infinite;
-}
-
-@keyframes spin {
-  to { transform:rotate(360deg); }
 }
 
 /* ===== RESPONSIVE ===== */
@@ -627,38 +609,41 @@ main {
 <body>
 
 <!-- ===== AUTH SCREEN ===== -->
-<div class="auth-overlay active" id="authOverlay">
+<div class="auth-overlay" id="authOverlay">
   <div class="auth-container">
     <div class="auth-logo">💧</div>
     <h1 id="authTitle">Welcome to Smart Flow BW</h1>
     <p id="authDesc">Monitor water, prevent leaks, save costs.</p>
     
+    <div class="success-message" id="authSuccess"></div>
     <div class="error-message" id="authError"></div>
     
     <form class="auth-form" id="authForm" onsubmit="handleAuth(event)">
       <div class="form-group">
         <label>Email</label>
-        <input type="email" id="authEmail" placeholder="you@example.com" required>
+        <input type="email" id="authEmail" placeholder="you@example.com" required autocomplete="email">
       </div>
       
       <div class="form-group">
         <label>Password</label>
-        <input type="password" id="authPassword" placeholder="At least 6 characters" required minlength="6">
+        <input type="password" id="authPassword" placeholder="At least 6 characters" required minlength="6" autocomplete="password">
       </div>
       
       <div class="form-group" id="nameGroup" style="display:none;">
         <label>Full Name</label>
-        <input type="text" id="authName" placeholder="Your name">
+        <input type="text" id="authName" placeholder="Your name" autocomplete="name">
       </div>
       
       <button type="submit" class="btn-auth" id="authBtn">Sign In</button>
       
       <div class="demo-note">
-        💡 <strong>Demo Account:</strong> Email: demo@smartflow.com | Password: demo123456
+        💡 <strong>Test Account:</strong><br>
+        Email: test@smartflow.com<br>
+        Password: Test123456
       </div>
 
       <div class="auth-toggle">
-        Don't have an account? <a onclick="toggleAuthMode(event)">Create one free</a>
+        Don't have an account? <button type="button" onclick="toggleAuthMode(event)">Create one free</button>
       </div>
     </form>
   </div>
@@ -705,7 +690,7 @@ main {
             <div class="card-title">Total Usage</div>
           </div>
           <div style="font-size:28px; font-weight:700; color:var(--blue); margin:16px 0;">--</div>
-          <div class="card-info">Loading data...</div>
+          <div class="card-info">No data yet</div>
         </div>
       </div>
     </div>
@@ -722,8 +707,7 @@ main {
 
       <div class="grid" id="householdsGrid">
         <div style="grid-column:1/-1; text-align:center; padding:40px; color:var(--muted);">
-          <div class="spinner" style="display:inline-block; margin-bottom:16px;"></div>
-          <p>Loading households...</p>
+          <p>No households yet. Add one to get started!</p>
         </div>
       </div>
     </div>
@@ -740,8 +724,7 @@ main {
 
       <div class="grid" id="devicesGrid">
         <div style="grid-column:1/-1; text-align:center; padding:40px; color:var(--muted);">
-          <div class="spinner" style="display:inline-block; margin-bottom:16px;"></div>
-          <p>Loading devices...</p>
+          <p>No devices yet. Add one to get started!</p>
         </div>
       </div>
     </div>
@@ -756,7 +739,7 @@ main {
       <div class="grid">
         <div class="card" style="grid-column:1/-1;">
           <h3 style="margin-bottom:24px; color:var(--navy); font-family:'Manrope',sans-serif;">Weekly Usage</h3>
-          <canvas id="usageChart" style="max-height:300px;"></canvas>
+          <p style="color:var(--muted); text-align:center; padding:40px;">No data available. Add devices and log readings to see analytics.</p>
         </div>
       </div>
     </div>
@@ -781,7 +764,7 @@ main {
       </div>
       <div class="form-group">
         <label>Number of Occupants</label>
-        <input type="number" id="householdOccupants" placeholder="4" min="1" required>
+        <input type="number" id="householdOccupants" placeholder="4" min="1" required value="1">
       </div>
       <button type="submit" class="btn-auth">Create Household</button>
     </form>
@@ -827,11 +810,35 @@ main {
 <div class="toast" id="toast"></div>
 
 <script>
-// ===== SUPABASE CONFIG =====
-const SUPABASE_URL = 'https://nfpkgjqsykrchpgwrxfx.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5mcGtnanFzeWtyY2hwZ3dyeGZ4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjQzNDEyNzIsImV4cCI6MjA0MDIxNzI3Mn0.1K_0Vqz5Q0G1H5Y8K8L9M0N1O2P3Q4R5S6T7U8V9W';
+// ===== LOCAL STORAGE DATABASE =====
+// Using localStorage as temporary DB until backend is ready
+const DB = {
+  users: [],
+  households: [],
+  devices: [],
+  readings: []
+};
 
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+function loadDB() {
+  const stored = localStorage.getItem('smartflowDB');
+  if (stored) {
+    Object.assign(DB, JSON.parse(stored));
+  } else {
+    // Initialize with test account
+    DB.users = [{
+      id: 'test-user-1',
+      email: 'test@smartflow.com',
+      password: 'Test123456', // In real app, this would be hashed
+      name: 'Test User',
+      created_at: new Date().toISOString()
+    }];
+    saveDB();
+  }
+}
+
+function saveDB() {
+  localStorage.setItem('smartflowDB', JSON.stringify(DB));
+}
 
 // ===== STATE =====
 const state = {
@@ -848,8 +855,10 @@ async function handleAuth(e) {
   const email = document.getElementById('authEmail').value.trim();
   const password = document.getElementById('authPassword').value.trim();
   const errorEl = document.getElementById('authError');
+  const successEl = document.getElementById('authSuccess');
   
   errorEl.classList.remove('show');
+  successEl.classList.remove('show');
   
   if (!email || !password) {
     showError('Please fill in all fields', errorEl);
@@ -860,25 +869,51 @@ async function handleAuth(e) {
     state.loading = true;
     document.getElementById('authBtn').disabled = true;
     
+    loadDB();
+    
     if (state.isSignUp) {
       const name = document.getElementById('authName').value.trim();
-      const { data, error } = await supabase.auth.signUp({
+      if (!name) {
+        showError('Please enter your name', errorEl);
+        return;
+      }
+
+      // Check if user exists
+      if (DB.users.find(u => u.email === email)) {
+        showError('Email already exists. Try logging in.', errorEl);
+        return;
+      }
+
+      // Create new user
+      const userId = 'user-' + Date.now();
+      DB.users.push({
+        id: userId,
         email,
         password,
-        options: { data: { full_name: name } }
+        name,
+        created_at: new Date().toISOString()
       });
-      
-      if (error) throw error;
-      showToast('Account created! Check your email.', 'success');
-      resetAuthForm();
+      saveDB();
+
+      showSuccess('Account created! Logging you in...', successEl);
+      setTimeout(() => {
+        state.user = DB.users.find(u => u.email === email);
+        loadUserData();
+        navigateToApp();
+        showToast('Welcome ' + name + '!', 'success');
+      }, 1500);
     } else {
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) throw error;
-      
-      state.user = data.user;
-      await loadUserData();
+      // Login
+      const user = DB.users.find(u => u.email === email && u.password === password);
+      if (!user) {
+        showError('Invalid email or password', errorEl);
+        return;
+      }
+
+      state.user = user;
+      loadUserData();
       navigateToApp();
-      showToast('Logged in successfully!', 'success');
+      showToast('Welcome back!', 'success');
     }
   } catch (error) {
     console.error('Auth error:', error);
@@ -894,32 +929,17 @@ function showError(msg, el) {
   el.classList.add('show');
 }
 
-async function loadUserData() {
-  try {
-    // Load households
-    const { data: households } = await supabase
-      .from('households')
-      .select('*')
-      .eq('user_id', state.user.id);
-    
-    state.households = households || [];
+function showSuccess(msg, el) {
+  el.textContent = msg;
+  el.classList.add('show');
+}
 
-    // Load devices
-    if (state.households.length > 0) {
-      const householdIds = state.households.map(h => h.id);
-      const { data: devices } = await supabase
-        .from('devices')
-        .select('*')
-        .in('household_id', householdIds);
-      
-      state.devices = devices || [];
-    }
-
-    renderUI();
-  } catch (error) {
-    console.error('Load error:', error);
-    showToast('Failed to load data: ' + error.message, 'error');
-  }
+function loadUserData() {
+  loadDB();
+  state.households = DB.households.filter(h => h.user_id === state.user.id);
+  const householdIds = state.households.map(h => h.id);
+  state.devices = DB.devices.filter(d => householdIds.includes(d.household_id));
+  renderUI();
 }
 
 function toggleAuthMode(e) {
@@ -928,20 +948,22 @@ function toggleAuthMode(e) {
   const nameGroup = document.getElementById('nameGroup');
   const btn = document.getElementById('authBtn');
   const title = document.getElementById('authTitle');
+  const desc = document.getElementById('authDesc');
   
   if (state.isSignUp) {
     nameGroup.style.display = 'block';
     btn.textContent = 'Create Account';
     title.textContent = 'Create Your Account';
+    desc.textContent = 'Join thousands monitoring their water in Botswana.';
   } else {
     nameGroup.style.display = 'none';
     btn.textContent = 'Sign In';
     title.textContent = 'Welcome to Smart Flow BW';
+    desc.textContent = 'Monitor water, prevent leaks, save costs.';
   }
 }
 
 async function logout() {
-  await supabase.auth.signOut();
   state.user = null;
   state.households = [];
   state.devices = [];
@@ -954,108 +976,112 @@ async function logout() {
 function resetAuthForm() {
   document.getElementById('authForm').reset();
   document.getElementById('authError').classList.remove('show');
+  document.getElementById('authSuccess').classList.remove('show');
   state.isSignUp = false;
   document.getElementById('nameGroup').style.display = 'none';
   document.getElementById('authTitle').textContent = 'Welcome to Smart Flow BW';
+  document.getElementById('authDesc').textContent = 'Monitor water, prevent leaks, save costs.';
   document.getElementById('authBtn').textContent = 'Sign In';
 }
 
 // ===== HOUSEHOLDS =====
-async function addHousehold(e) {
+function addHousehold(e) {
   e.preventDefault();
   const name = document.getElementById('householdName').value;
   const address = document.getElementById('householdAddress').value;
   const occupants = parseInt(document.getElementById('householdOccupants').value);
 
-  try {
-    const { data, error } = await supabase
-      .from('households')
-      .insert([{
-        user_id: state.user.id,
-        name,
-        address,
-        occupants,
-        created_at: new Date()
-      }])
-      .select();
+  loadDB();
 
-    if (error) throw error;
+  const household = {
+    id: 'household-' + Date.now(),
+    user_id: state.user.id,
+    name,
+    address,
+    occupants,
+    created_at: new Date().toISOString()
+  };
 
-    state.households.push(data[0]);
-    renderUI();
-    closeModal('householdModal');
-    document.getElementById('householdName').value = '';
-    document.getElementById('householdAddress').value = '';
-    document.getElementById('householdOccupants').value = '';
-    showToast(`${name} added!`, 'success');
-  } catch (error) {
-    showToast('Error: ' + error.message, 'error');
-  }
+  DB.households.push(household);
+  saveDB();
+
+  state.households.push(household);
+  renderUI();
+  closeModal('householdModal');
+  
+  document.getElementById('householdName').value = '';
+  document.getElementById('householdAddress').value = '';
+  document.getElementById('householdOccupants').value = '1';
+  
+  showToast(`${name} added!`, 'success');
 }
 
-async function deleteHousehold(id) {
-  try {
-    await supabase.from('households').delete().eq('id', id);
-    state.households = state.households.filter(h => h.id !== id);
-    state.devices = state.devices.filter(d => d.household_id !== id);
-    renderUI();
-    showToast('Household deleted', 'success');
-  } catch (error) {
-    showToast('Error: ' + error.message, 'error');
-  }
+function deleteHousehold(id) {
+  loadDB();
+  DB.households = DB.households.filter(h => h.id !== id);
+  DB.devices = DB.devices.filter(d => d.household_id !== id);
+  saveDB();
+  
+  state.households = state.households.filter(h => h.id !== id);
+  state.devices = state.devices.filter(d => d.household_id !== id);
+  renderUI();
+  showToast('Household deleted', 'success');
 }
 
 // ===== DEVICES =====
-async function addDevice(e) {
+function addDevice(e) {
   e.preventDefault();
   const householdId = parseInt(document.getElementById('deviceHousehold').value);
   const name = document.getElementById('deviceName').value;
   const type = document.getElementById('deviceType').value;
   const location = document.getElementById('deviceLocation').value;
 
-  try {
-    const { data, error } = await supabase
-      .from('devices')
-      .insert([{
-        household_id: householdId,
-        name,
-        type,
-        location,
-        status: 'online',
-        created_at: new Date()
-      }])
-      .select();
-
-    if (error) throw error;
-
-    state.devices.push(data[0]);
-    renderUI();
-    closeModal('deviceModal');
-    document.getElementById('deviceName').value = '';
-    document.getElementById('deviceLocation').value = '';
-    showToast(`${name} added!`, 'success');
-  } catch (error) {
-    showToast('Error: ' + error.message, 'error');
+  if (!householdId) {
+    showToast('Please select a household', 'error');
+    return;
   }
+
+  loadDB();
+
+  const device = {
+    id: 'device-' + Date.now(),
+    household_id: householdId,
+    name,
+    type,
+    location,
+    status: 'online',
+    created_at: new Date().toISOString()
+  };
+
+  DB.devices.push(device);
+  saveDB();
+
+  state.devices.push(device);
+  renderUI();
+  closeModal('deviceModal');
+  
+  document.getElementById('deviceName').value = '';
+  document.getElementById('deviceLocation').value = '';
+  
+  showToast(`${name} added!`, 'success');
 }
 
-async function deleteDevice(id) {
-  try {
-    await supabase.from('devices').delete().eq('id', id);
-    state.devices = state.devices.filter(d => d.id !== id);
-    renderUI();
-    showToast('Device deleted', 'success');
-  } catch (error) {
-    showToast('Error: ' + error.message, 'error');
-  }
+function deleteDevice(id) {
+  loadDB();
+  DB.devices = DB.devices.filter(d => d.id !== id);
+  saveDB();
+  
+  state.devices = state.devices.filter(d => d.id !== id);
+  renderUI();
+  showToast('Device deleted', 'success');
 }
 
 // ===== UI =====
 function navigateToApp() {
   document.getElementById('authOverlay').classList.add('hidden');
   document.getElementById('appWrapper').classList.add('active');
-  document.getElementById('userName').textContent = state.user.email?.split('@')[0] || 'User';
-  document.getElementById('userAvatar').textContent = (state.user.email?.charAt(0) || 'U').toUpperCase();
+  document.getElementById('userName').textContent = state.user.name || state.user.email?.split('@')[0];
+  document.getElementById('userAvatar').textContent = (state.user.name || state.user.email)?.charAt(0).toUpperCase();
 }
 
 function switchTab(tab) {
@@ -1097,7 +1123,7 @@ function renderUI() {
         </div>
         <div class="card-info">📍 ${h.address}</div>
         <div class="card-actions">
-          <button class="btn-small" onclick="deleteHousehold(${h.id})">Delete</button>
+          <button class="btn-small" onclick="deleteHousehold('${h.id}')">Delete</button>
         </div>
       </div>
     `).join('') :
@@ -1106,19 +1132,22 @@ function renderUI() {
   // Devices
   const devicesGrid = document.getElementById('devicesGrid');
   devicesGrid.innerHTML = state.devices.length ?
-    state.devices.map(d => `
-      <div class="card">
-        <div class="card-header">
-          <div class="card-title">⌘ ${d.name}</div>
-          <div class="card-badge">${d.type}</div>
+    state.devices.map(d => {
+      const household = state.households.find(h => h.id === d.household_id);
+      return `
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">⌘ ${d.name}</div>
+            <div class="card-badge">${d.type}</div>
+          </div>
+          <div class="card-info">📍 ${d.location}</div>
+          <div class="card-info">🏠 ${household?.name || 'Unknown'}</div>
+          <div class="card-actions">
+            <button class="btn-small" onclick="deleteDevice('${d.id}')">Delete</button>
+          </div>
         </div>
-        <div class="card-info">📍 ${d.location}</div>
-        <div class="card-info" style="margin-top:8px;">Household: ${state.households.find(h => h.id === d.household_id)?.name}</div>
-        <div class="card-actions">
-          <button class="btn-small" onclick="deleteDevice(${d.id})">Delete</button>
-        </div>
-      </div>
-    `).join('') :
+      `;
+    }).join('') :
     '<div style="grid-column:1/-1; text-align:center; padding:40px; color:var(--muted);">No devices yet. Add one!</div>';
 }
 
@@ -1130,16 +1159,28 @@ function showToast(msg, type = 'info') {
 }
 
 // ===== INIT =====
-async function init() {
-  const { data: { session } } = await supabase.auth.getSession();
-  if (session) {
-    state.user = session.user;
-    await loadUserData();
-    navigateToApp();
+window.addEventListener('load', () => {
+  loadDB();
+  const savedUser = localStorage.getItem('smartflowUser');
+  if (savedUser) {
+    const userEmail = JSON.parse(savedUser);
+    const user = DB.users.find(u => u.email === userEmail);
+    if (user) {
+      state.user = user;
+      loadUserData();
+      navigateToApp();
+    }
   }
-}
+});
 
-window.addEventListener('load', init);
+// Save user session
+document.addEventListener('DOMContentLoaded', () => {
+  setInterval(() => {
+    if (state.user) {
+      localStorage.setItem('smartflowUser', JSON.stringify(state.user.email));
+    }
+  }, 5000);
+});
 </script>
 
 </body>
