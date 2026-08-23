@@ -1,1316 +1,1146 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Smart Flow BW</title>
-    <meta name="theme-color" content="#377ded" />
-    <link rel="manifest" href="manifest.webmanifest" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="styles.css" />
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-      .brand img { width: 36px; height: 36px; object-fit: cover; object-position: 50% 15%; border-radius: 50%; mix-blend-mode: multiply; }
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Smart Flow BW - Water Management</title>
+<meta name="theme-color" content="#0b6bcb" />
+<link rel="manifest" href="manifest.webmanifest" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'DM Sans',sans-serif; background:#f3f7fb; color:#1a1a1a; line-height:1.6; }
+
+:root {
+  --navy:#09243f;
+  --blue:#0b6bcb;
+  --cyan:#22b8d7;
+  --green:#159a68;
+  --amber:#c97820;
+  --red:#c94b4b;
+  --bg:#f3f7fb;
+  --card:#fff;
+  --muted:#64748b;
+  --line:#e3ebf3;
+  --shadow:0 12px 35px rgba(9,36,63,.08);
+}
+
+/* ===== AUTH SCREEN ===== */
+.auth-overlay {
+  position:fixed;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  background:linear-gradient(135deg, var(--navy) 0%, var(--blue) 100%);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  z-index:9999;
+  opacity:1;
+  visibility:visible;
+  transition:all 0.3s;
+}
+
+.auth-overlay.hidden {
+  opacity:0;
+  visibility:hidden;
+  pointer-events:none;
+}
+
+.auth-container {
+  background:var(--card);
+  border-radius:16px;
+  padding:48px 40px;
+  max-width:420px;
+  width:90%;
+  box-shadow:0 20px 60px rgba(0,0,0,.3);
+  text-align:center;
+  animation:slideUp 0.4s ease-out;
+}
+
+@keyframes slideUp {
+  from { opacity:0; transform:translateY(30px); }
+  to { opacity:1; transform:translateY(0); }
+}
+
+.auth-logo {
+  width:100px;
+  height:100px;
+  margin:0 auto 24px;
+  background:linear-gradient(135deg, var(--blue), var(--cyan));
+  border-radius:16px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:48px;
+  box-shadow:0 8px 24px rgba(11,107,203,.2);
+}
+
+.auth-container h1 {
+  font-size:28px;
+  color:var(--navy);
+  margin-bottom:8px;
+  font-family:'Manrope',sans-serif;
+  font-weight:700;
+}
+
+.auth-container p {
+  color:var(--muted);
+  margin-bottom:32px;
+  font-size:14px;
+}
+
+.auth-form {
+  display:flex;
+  flex-direction:column;
+  gap:16px;
+}
+
+.form-group {
+  text-align:left;
+}
+
+.form-group label {
+  display:block;
+  font-size:12px;
+  font-weight:600;
+  text-transform:uppercase;
+  color:var(--muted);
+  margin-bottom:8px;
+  letter-spacing:0.5px;
+}
+
+.form-group input {
+  width:100%;
+  padding:12px 16px;
+  border:1px solid var(--line);
+  border-radius:8px;
+  font-size:16px;
+  font-family:inherit;
+  transition:all 0.3s;
+}
+
+.form-group input:focus {
+  outline:none;
+  border-color:var(--blue);
+  box-shadow:0 0 0 3px rgba(11,107,203,.1);
+}
+
+.btn-auth {
+  background:linear-gradient(135deg, var(--blue), var(--cyan));
+  color:white;
+  border:none;
+  padding:14px 24px;
+  border-radius:8px;
+  font-weight:600;
+  font-size:16px;
+  cursor:pointer;
+  transition:all 0.3s;
+  text-transform:uppercase;
+  letter-spacing:0.5px;
+  font-family:inherit;
+}
+
+.btn-auth:hover:not(:disabled) {
+  transform:translateY(-2px);
+  box-shadow:0 8px 20px rgba(11,107,203,.3);
+}
+
+.btn-auth:disabled {
+  opacity:0.6;
+  cursor:not-allowed;
+}
+
+.auth-toggle {
+  margin-top:24px;
+  padding-top:24px;
+  border-top:1px solid var(--line);
+  font-size:14px;
+  color:var(--muted);
+}
+
+.auth-toggle a {
+  color:var(--blue);
+  cursor:pointer;
+  font-weight:600;
+  text-decoration:none;
+  border:none;
+  background:none;
+}
+
+.auth-toggle a:hover {
+  text-decoration:underline;
+}
+
+.demo-note {
+  background:#fff3cd;
+  border-left:4px solid var(--amber);
+  padding:12px 16px;
+  margin-bottom:24px;
+  border-radius:4px;
+  font-size:13px;
+  color:#664d03;
+}
+
+.error-message {
+  background:#fee;
+  border-left:4px solid var(--red);
+  padding:12px 16px;
+  margin-bottom:16px;
+  border-radius:4px;
+  font-size:13px;
+  color:#c94b4b;
+  display:none;
+}
+
+.error-message.show {
+  display:block;
+}
+
+/* ===== APP SHELL ===== */
+.app-wrapper {
+  display:none;
+  min-height:100vh;
+  flex-direction:column;
+}
+
+.app-wrapper.active {
+  display:flex;
+}
+
+header {
+  background:linear-gradient(135deg, var(--navy) 0%, var(--blue) 100%);
+  color:white;
+  padding:20px;
+  box-shadow:var(--shadow);
+  position:sticky;
+  top:0;
+  z-index:100;
+}
+
+.header-content {
+  max-width:1400px;
+  margin:0 auto;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+.brand {
+  display:flex;
+  align-items:center;
+  gap:12px;
+  font-weight:700;
+  font-size:18px;
+  font-family:'Manrope',sans-serif;
+}
+
+.brand-icon {
+  width:40px;
+  height:40px;
+  background:rgba(255,255,255,.2);
+  border-radius:8px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:20px;
+}
+
+.user-info {
+  display:flex;
+  align-items:center;
+  gap:16px;
+}
+
+.user-avatar {
+  width:40px;
+  height:40px;
+  border-radius:50%;
+  background:rgba(255,255,255,.3);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:600;
+  font-size:16px;
+}
+
+.user-details {
+  text-align:right;
+}
+
+.user-name {
+  display:block;
+  font-weight:600;
+}
+
+.user-status {
+  font-size:11px;
+  opacity:0.8;
+}
+
+.btn-logout {
+  background:rgba(255,255,255,.1);
+  color:white;
+  border:1px solid rgba(255,255,255,.2);
+  padding:8px 16px;
+  border-radius:6px;
+  cursor:pointer;
+  font-size:12px;
+  font-weight:600;
+  transition:all 0.3s;
+  font-family:inherit;
+}
+
+.btn-logout:hover {
+  background:rgba(255,255,255,.2);
+}
+
+main {
+  flex:1;
+  max-width:1400px;
+  margin:0 auto;
+  width:100%;
+  padding:32px 20px;
+}
+
+/* ===== TABS ===== */
+.tabs {
+  display:flex;
+  gap:8px;
+  margin-bottom:32px;
+  border-bottom:2px solid var(--line);
+  overflow-x:auto;
+  padding-bottom:0;
+}
+
+.tab-btn {
+  padding:12px 20px;
+  background:none;
+  border:none;
+  border-bottom:3px solid transparent;
+  color:var(--muted);
+  cursor:pointer;
+  font-weight:600;
+  font-size:14px;
+  transition:all 0.3s;
+  white-space:nowrap;
+  font-family:inherit;
+}
+
+.tab-btn.active {
+  color:var(--blue);
+  border-bottom-color:var(--blue);
+}
+
+.tab-content {
+  display:none;
+}
+
+.tab-content.active {
+  display:block;
+}
+
+/* ===== HERO ===== */
+.hero {
+  margin-bottom:32px;
+}
+
+.hero h1 {
+  font-size:36px;
+  margin-bottom:8px;
+  color:var(--navy);
+  font-family:'Manrope',sans-serif;
+  font-weight:700;
+}
+
+.hero p {
+  font-size:18px;
+  color:var(--muted);
+  max-width:500px;
+}
+
+.hero-actions {
+  display:flex;
+  gap:12px;
+  margin-top:24px;
+}
+
+.btn-primary {
+  background:linear-gradient(135deg, var(--green), #1abc9c);
+  color:white;
+  border:none;
+  padding:12px 24px;
+  border-radius:8px;
+  cursor:pointer;
+  font-weight:600;
+  font-size:14px;
+  transition:all 0.3s;
+  font-family:inherit;
+}
+
+.btn-primary:hover {
+  transform:translateY(-2px);
+  box-shadow:0 4px 12px rgba(21,154,104,.3);
+}
+
+/* ===== GRID ===== */
+.grid {
+  display:grid;
+  grid-template-columns:repeat(auto-fill, minmax(300px, 1fr));
+  gap:20px;
+  margin-top:24px;
+}
+
+.card {
+  background:var(--card);
+  border:2px solid var(--line);
+  border-radius:12px;
+  padding:20px;
+  transition:all 0.3s;
+}
+
+.card:hover {
+  border-color:var(--blue);
+  box-shadow:var(--shadow);
+}
+
+.card-header {
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  margin-bottom:16px;
+}
+
+.card-title {
+  font-size:18px;
+  font-weight:600;
+  color:var(--navy);
+  font-family:'Manrope',sans-serif;
+}
+
+.card-badge {
+  background:var(--blue);
+  color:white;
+  padding:4px 12px;
+  border-radius:20px;
+  font-size:11px;
+  font-weight:600;
+}
+
+.card-info {
+  font-size:13px;
+  color:var(--muted);
+  margin-bottom:12px;
+}
+
+.card-actions {
+  display:flex;
+  gap:8px;
+  margin-top:12px;
+}
+
+.btn-small {
+  background:var(--line);
+  border:none;
+  padding:8px 12px;
+  border-radius:6px;
+  cursor:pointer;
+  font-size:12px;
+  font-weight:600;
+  transition:all 0.3s;
+  font-family:inherit;
+}
+
+.btn-small:hover {
+  background:#d0dce6;
+}
+
+.btn-danger {
+  background:#fee;
+  color:var(--red);
+}
+
+.btn-danger:hover {
+  background:#fdd;
+}
+
+/* ===== MODAL ===== */
+.modal {
+  display:none;
+  position:fixed;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  background:rgba(0,0,0,.5);
+  z-index:500;
+  align-items:center;
+  justify-content:center;
+  backdrop-filter:blur(4px);
+}
+
+.modal.open {
+  display:flex;
+}
+
+.modal-content {
+  background:var(--card);
+  border-radius:12px;
+  width:90%;
+  max-width:500px;
+  padding:32px;
+  box-shadow:0 25px 50px rgba(0,0,0,.15);
+  animation:slideUp 0.3s ease-out;
+}
+
+.modal-header {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:24px;
+}
+
+.modal-header h3 {
+  font-size:20px;
+  color:var(--navy);
+  font-family:'Manrope',sans-serif;
+}
+
+.modal-close {
+  background:none;
+  border:none;
+  font-size:28px;
+  color:var(--muted);
+  cursor:pointer;
+  width:32px;
+  height:32px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.modal-close:hover {
+  color:var(--navy);
+}
+
+/* ===== TOAST ===== */
+.toast {
+  position:fixed;
+  bottom:24px;
+  left:24px;
+  background:var(--navy);
+  color:white;
+  padding:16px 24px;
+  border-radius:8px;
+  font-size:14px;
+  box-shadow:var(--shadow);
+  opacity:0;
+  transform:translateY(100px);
+  transition:all 0.3s;
+  z-index:150;
+  pointer-events:none;
+}
+
+.toast.show {
+  opacity:1;
+  transform:translateY(0);
+  pointer-events:auto;
+}
+
+.toast.error {
+  background:var(--red);
+}
+
+.toast.success {
+  background:var(--green);
+}
+
+.toast.warning {
+  background:var(--amber);
+}
+
+/* ===== LOADING ===== */
+.loading {
+  display:inline-block;
+  width:4px;
+  height:4px;
+  background:currentColor;
+  border-radius:50%;
+  opacity:0;
+  animation:pulse 1.5s ease-in-out infinite;
+}
+
+.loading:nth-child(2) {
+  animation-delay:0.2s;
+}
+
+.loading:nth-child(3) {
+  animation-delay:0.4s;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity:0; }
+  50% { opacity:1; }
+}
+
+.spinner {
+  display:inline-block;
+  width:20px;
+  height:20px;
+  border:3px solid rgba(11,107,203,.2);
+  border-top-color:var(--blue);
+  border-radius:50%;
+  animation:spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform:rotate(360deg); }
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width:768px) {
+  .grid {
+    grid-template-columns:1fr;
+  }
+  
+  .auth-container {
+    padding:36px 24px;
+  }
+  
+  .hero h1 {
+    font-size:28px;
+  }
+  
+  .header-content {
+    flex-direction:column;
+    gap:16px;
+  }
+}
+
+</style>
+</head>
+<body>
+
+<!-- ===== AUTH SCREEN ===== -->
+<div class="auth-overlay active" id="authOverlay">
+  <div class="auth-container">
+    <div class="auth-logo">💧</div>
+    <h1 id="authTitle">Welcome to Smart Flow BW</h1>
+    <p id="authDesc">Monitor water, prevent leaks, save costs.</p>
+    
+    <div class="error-message" id="authError"></div>
+    
+    <form class="auth-form" id="authForm" onsubmit="handleAuth(event)">
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="authEmail" placeholder="you@example.com" required>
+      </div>
       
-      /* Auth Screen */
-      .auth-overlay {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(135deg, #09243f 0%, #0b6bcb 100%);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        z-index: 9999;
-        opacity: 1;
-        visibility: visible;
-        transition: all 0.3s ease;
-      }
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="authPassword" placeholder="At least 6 characters" required minlength="6">
+      </div>
+      
+      <div class="form-group" id="nameGroup" style="display:none;">
+        <label>Full Name</label>
+        <input type="text" id="authName" placeholder="Your name">
+      </div>
+      
+      <button type="submit" class="btn-auth" id="authBtn">Sign In</button>
+      
+      <div class="demo-note">
+        💡 <strong>Demo Account:</strong> Email: demo@smartflow.com | Password: demo123456
+      </div>
 
-      .auth-overlay.hidden {
-        opacity: 0;
-        visibility: hidden;
-        pointer-events: none;
-      }
+      <div class="auth-toggle">
+        Don't have an account? <a onclick="toggleAuthMode(event)">Create one free</a>
+      </div>
+    </form>
+  </div>
+</div>
 
-      .auth-box {
-        background: white;
-        border-radius: 16px;
-        padding: 48px 40px;
-        max-width: 420px;
-        width: 90%;
-        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-        text-align: center;
-        animation: slideUp 0.4s ease-out;
-      }
+<!-- ===== APP ===== -->
+<div class="app-wrapper" id="appWrapper">
+  <header>
+    <div class="header-content">
+      <div class="brand">
+        <div class="brand-icon">💧</div>
+        <div>SMART <span>FLOW</span> BW</div>
+      </div>
+      <div class="user-info">
+        <div class="user-avatar" id="userAvatar">U</div>
+        <div class="user-details">
+          <span class="user-name" id="userName">User</span>
+          <span class="user-status">Active</span>
+        </div>
+        <button class="btn-logout" onclick="logout()">Logout</button>
+      </div>
+    </div>
+  </header>
 
-      @keyframes slideUp {
-        from {
-          opacity: 0;
-          transform: translateY(30px);
-        }
-        to {
-          opacity: 1;
-          transform: translateY(0);
-        }
-      }
+  <main>
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTab('overview')">📊 Overview</button>
+      <button class="tab-btn" onclick="switchTab('households')">🏠 Households</button>
+      <button class="tab-btn" onclick="switchTab('devices')">⌘ Devices</button>
+      <button class="tab-btn" onclick="switchTab('analytics')">📈 Analytics</button>
+    </div>
 
-      .auth-logo {
-        width: 100px;
-        height: 100px;
-        margin: 0 auto 24px;
-        background: linear-gradient(135deg, #0b6bcb, #22b8d7);
-        border-radius: 16px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 48px;
-        box-shadow: 0 8px 24px rgba(11, 107, 203, 0.2);
-      }
+    <!-- ===== OVERVIEW ===== -->
+    <div class="tab-content active" id="overview-tab">
+      <div class="hero">
+        <h1 id="greeting">Welcome to Smart Flow BW 💧</h1>
+        <p>Monitor your water usage, detect leaks, and save money in real-time.</p>
+      </div>
 
-      .auth-box h1 {
-        font-size: 28px;
-        color: #09243f;
-        margin-bottom: 8px;
-      }
-
-      .auth-box p {
-        color: #64748b;
-        margin-bottom: 32px;
-        font-size: 14px;
-      }
-
-      .auth-form {
-        display: flex;
-        flex-direction: column;
-        gap: 16px;
-      }
-
-      .form-group {
-        text-align: left;
-      }
-
-      .form-group label {
-        display: block;
-        font-size: 12px;
-        font-weight: 600;
-        text-transform: uppercase;
-        color: #64748b;
-        margin-bottom: 8px;
-        letter-spacing: 0.5px;
-      }
-
-      .form-group input,
-      .form-group select {
-        width: 100%;
-        padding: 12px 16px;
-        border: 1px solid #e3ebf3;
-        border-radius: 8px;
-        font-size: 16px;
-        font-family: inherit;
-        transition: all 0.3s;
-      }
-
-      .form-group input:focus,
-      .form-group select:focus {
-        outline: none;
-        border-color: #0b6bcb;
-        box-shadow: 0 0 0 3px rgba(11, 107, 203, 0.1);
-      }
-
-      .btn-auth {
-        background: linear-gradient(135deg, #0b6bcb, #22b8d7);
-        color: white;
-        border: none;
-        padding: 14px 24px;
-        border-radius: 8px;
-        font-weight: 600;
-        font-size: 16px;
-        cursor: pointer;
-        transition: all 0.3s;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-      }
-
-      .btn-auth:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 20px rgba(11, 107, 203, 0.3);
-      }
-
-      .auth-toggle {
-        margin-top: 24px;
-        padding-top: 24px;
-        border-top: 1px solid #e3ebf3;
-        font-size: 14px;
-        color: #64748b;
-      }
-
-      .auth-toggle a {
-        color: #0b6bcb;
-        cursor: pointer;
-        font-weight: 600;
-        text-decoration: none;
-      }
-
-      .demo-note {
-        background: #fff3cd;
-        border-left: 4px solid #c97820;
-        padding: 12px 16px;
-        margin-bottom: 24px;
-        border-radius: 4px;
-        font-size: 13px;
-        color: #664d03;
-      }
-
-      .app-shell.hidden {
-        display: none;
-      }
-
-      /* Thothi Animated Character */
-      .thothi-character {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        position: relative;
-      }
-
-      .droplet-body {
-        width: 60px;
-        height: 80px;
-        background: linear-gradient(135deg, #22b8d7 0%, #0b6bcb 100%);
-        border-radius: 50% 50% 50% 0;
-        transform: rotate(-45deg);
-        position: relative;
-        animation: float 3s ease-in-out infinite;
-        box-shadow: 0 8px 24px rgba(11, 107, 203, 0.3);
-      }
-
-      @keyframes float {
-        0%, 100% { transform: rotate(-45deg) translateY(0); }
-        50% { transform: rotate(-45deg) translateY(-10px); }
-      }
-
-      .droplet-eye {
-        width: 8px;
-        height: 8px;
-        background: white;
-        border-radius: 50%;
-        position: absolute;
-        top: 20px;
-      }
-
-      .droplet-eye:first-of-type {
-        left: 15px;
-        animation: blink 3s ease-in-out infinite;
-      }
-
-      .droplet-eye:last-of-type {
-        right: 15px;
-        animation: blink 3s ease-in-out infinite;
-      }
-
-      @keyframes blink {
-        0%, 85%, 100% { height: 8px; }
-        90% { height: 2px; }
-      }
-
-      .droplet-mouth {
-        width: 20px;
-        height: 10px;
-        border: 2px solid white;
-        border-top: none;
-        border-radius: 0 0 20px 20px;
-        position: absolute;
-        bottom: 15px;
-        left: 50%;
-        transform: translateX(-50%);
-        animation: smile 2s ease-in-out infinite;
-      }
-
-      @keyframes smile {
-        0%, 100% { border-radius: 0 0 20px 20px; }
-        50% { border-radius: 0 0 15px 15px; transform: translateX(-50%) scaleY(1.2); }
-      }
-
-      /* Modal */
-      .modal {
-        display: none;
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.5);
-        z-index: 500;
-        align-items: center;
-        justify-content: center;
-        backdrop-filter: blur(4px);
-      }
-
-      .modal.open {
-        display: flex;
-      }
-
-      .modal-content {
-        background: white;
-        border-radius: 12px;
-        width: 90%;
-        max-width: 500px;
-        padding: 32px;
-        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
-        animation: slideUp 0.3s ease-out;
-      }
-
-      .modal-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 24px;
-      }
-
-      .modal-header h3 {
-        font-size: 20px;
-        color: #09243f;
-      }
-
-      .modal-close {
-        background: none;
-        border: none;
-        font-size: 28px;
-        color: #64748b;
-        cursor: pointer;
-        width: 32px;
-        height: 32px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      }
-
-      .modal-close:hover {
-        color: #09243f;
-      }
-
-      /* Households & Devices Grid */
-      .households-grid,
-      .devices-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-        gap: 20px;
-        margin-top: 24px;
-      }
-
-      .household-card,
-      .device-card {
-        background: white;
-        border: 2px solid #e3ebf3;
-        border-radius: 12px;
-        padding: 20px;
-        transition: all 0.3s;
-        cursor: pointer;
-      }
-
-      .household-card:hover,
-      .device-card:hover {
-        border-color: #0b6bcb;
-        box-shadow: 0 12px 35px rgba(9, 36, 63, 0.08);
-      }
-
-      .card-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        margin-bottom: 16px;
-      }
-
-      .card-title {
-        font-size: 18px;
-        font-weight: 600;
-        color: #09243f;
-      }
-
-      .card-badge {
-        background: #0b6bcb;
-        color: white;
-        padding: 4px 12px;
-        border-radius: 20px;
-        font-size: 11px;
-        font-weight: 600;
-      }
-
-      .card-info {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 12px;
-        margin-bottom: 16px;
-        border-bottom: 1px solid #e3ebf3;
-        padding-bottom: 16px;
-      }
-
-      .info-item {
-        font-size: 12px;
-        color: #64748b;
-      }
-
-      .info-item strong {
-        display: block;
-        color: #09243f;
-        font-size: 16px;
-        margin-top: 4px;
-      }
-
-      .btn-add-item {
-        background: linear-gradient(135deg, #159a68, #1abc9c);
-        color: white;
-        border: none;
-        padding: 10px 20px;
-        border-radius: 6px;
-        cursor: pointer;
-        font-weight: 600;
-        font-size: 14px;
-        transition: all 0.3s;
-        width: 100%;
-        margin-top: 16px;
-      }
-
-      .btn-add-item:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(21, 154, 104, 0.3);
-      }
-
-      /* Analytics */
-      .analytics-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-        gap: 24px;
-        margin-top: 24px;
-      }
-
-      .chart-container {
-        background: white;
-        border: 1px solid #e3ebf3;
-        border-radius: 12px;
-        padding: 24px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-      }
-
-      .chart-container h3 {
-        font-size: 18px;
-        color: #09243f;
-        margin-bottom: 8px;
-      }
-
-      .chart-container p {
-        font-size: 13px;
-        color: #64748b;
-        margin-bottom: 20px;
-      }
-
-      .chart-wrapper {
-        position: relative;
-        height: 300px;
-      }
-
-      /* Tabs */
-      .dashboard-tabs {
-        display: flex;
-        gap: 8px;
-        margin-bottom: 32px;
-        border-bottom: 2px solid #e3ebf3;
-        overflow-x: auto;
-        padding-bottom: 0;
-      }
-
-      .tab-btn {
-        padding: 12px 20px;
-        background: none;
-        border: none;
-        border-bottom: 3px solid transparent;
-        color: #64748b;
-        cursor: pointer;
-        font-weight: 600;
-        font-size: 14px;
-        transition: all 0.3s;
-        white-space: nowrap;
-      }
-
-      .tab-btn.active {
-        color: #0b6bcb;
-        border-bottom-color: #0b6bcb;
-      }
-
-      .tab-content {
-        display: none;
-      }
-
-      .tab-content.active {
-        display: block;
-      }
-
-      @media (max-width: 768px) {
-        .households-grid,
-        .devices-grid {
-          grid-template-columns: 1fr;
-        }
-        
-        .analytics-grid {
-          grid-template-columns: 1fr;
-        }
-
-        .auth-box {
-          padding: 36px 24px;
-        }
-      }
-    </style>
-  </head>
-  <body>
-    <!-- Auth Overlay -->
-    <div class="auth-overlay" id="authOverlay">
-      <div class="auth-box">
-        <div class="auth-logo">💧</div>
-        <h1 id="authTitle">Welcome to Smart Flow BW</h1>
-        <p id="authDesc">Monitor water, prevent leaks, save costs.</p>
-        
-        <form class="auth-form" id="authForm" onsubmit="handleAuth(event)">
-          <div class="form-group">
-            <label>Email</label>
-            <input type="email" id="authEmail" placeholder="you@example.com" required>
+      <div class="grid" id="overviewCards">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Total Usage</div>
           </div>
-          <div class="form-group">
-            <label id="passwordLabel">Password</label>
-            <input type="password" id="authPassword" placeholder="Enter password" required>
-          </div>
-          <div class="form-group" id="nameGroup" style="display: none;">
-            <label>Full Name</label>
-            <input type="text" id="authName" placeholder="Your name">
-          </div>
-          <button type="submit" class="btn-auth" id="authBtn">Sign In</button>
-          
-          <div class="demo-note" id="demoNote">
-            💡 <strong>Try the demo:</strong> Use any email/password to explore features.
-          </div>
-
-          <div class="auth-toggle">
-            Don't have an account? <a id="toggleAuth" onclick="toggleAuthMode(event)">Create one free</a>
-          </div>
-        </form>
+          <div style="font-size:28px; font-weight:700; color:var(--blue); margin:16px 0;">--</div>
+          <div class="card-info">Loading data...</div>
+        </div>
       </div>
     </div>
 
-    <!-- Main App -->
-    <div class="app-shell hidden" id="appShell">
-      <aside class="sidebar">
-        <a class="brand" href="#dashboard" aria-label="Smart Flow BW home">
-          <img src="smart-flow-logo.jpg" alt="Smart Flow BW logo" />
-          <span>smart<span>flow</span><small>BW</small></span>
-        </a>
-        <nav>
-          <a class="nav-link active" href="#dashboard" onclick="switchTab('overview')"><span>⌂</span> Overview</a>
-          <a class="nav-link" href="#households" onclick="switchTab('households')"><span>🏠</span> Households</a>
-          <a class="nav-link" href="#devices" onclick="switchTab('devices')"><span>⌘</span> My Devices</a>
-          <a class="nav-link" href="#analytics" onclick="switchTab('analytics')"><span>📊</span> Analytics</a>
-          <a class="nav-link" href="#alerts" onclick="switchTab('alerts')"><span>♧</span> Alerts <b id="alertCount">1</b></a>
-        </nav>
-        <section class="sidebar-card">
-          <span class="drop-icon">⌁</span>
-          <h3>Every drop counts.</h3>
-          <p id="savedWater">You have saved 18% more water this month.</p>
-          <a href="#tips">See your impact →</a>
-        </section>
-        <div class="profile">
-          <div class="avatar" id="userAvatar">U</div>
-          <div>
-            <strong id="userName">User</strong>
-            <small id="userLocation">Botswana</small>
-          </div>
-          <button aria-label="Profile options" onclick="logout()">⎙</button>
-        </div>
-      </aside>
-
-      <main>
-        <header class="topbar">
-          <button class="menu-button" aria-label="Open navigation">☰</button>
-          <div class="location">
-            <span>⌖</span>
-            <span id="currentLocation">My Home</span>
-            <small id="currentLocationDesc">Botswana</small>
-          </div>
-          <div class="top-actions">
-            <button class="icon-button" aria-label="Help">?</button>
-            <button class="icon-button notification" aria-label="Notifications" onclick="toggleAlerts()">♧</button>
-          </div>
-        </header>
-
-        <section class="content">
-          <!-- Dashboard Tabs -->
-          <div class="dashboard-tabs">
-            <button class="tab-btn active" onclick="switchTab('overview')">Overview</button>
-            <button class="tab-btn" onclick="switchTab('households')">Households</button>
-            <button class="tab-btn" onclick="switchTab('devices')">Devices</button>
-            <button class="tab-btn" onclick="switchTab('analytics')">Analytics</button>
-          </div>
-
-          <!-- OVERVIEW TAB -->
-          <div class="tab-content active" id="overview-tab">
-            <div class="welcome-row">
-              <div>
-                <p class="eyebrow" id="todayDate">Friday, 21 August</p>
-                <h1 id="greeting">Good afternoon <span>⌁</span></h1>
-                <p class="subtitle">Your home is protected and water is flowing normally.</p>
-              </div>
-              <button class="outline-button" id="reportButton" onclick="downloadReport()">⇩ Download report</button>
-            </div>
-
-            <section class="status-card">
-              <div class="status-heading">
-                <div class="status-orb">✓</div>
-                <div>
-                  <p>HOME WATER STATUS</p>
-                  <h2 id="statusText">Everything is flowing well</h2>
-                </div>
-              </div>
-              <div class="status-details">
-                <div>
-                  <span>System status</span>
-                  <strong><i class="online-dot"></i> All devices online</strong>
-                </div>
-                <div>
-                  <span>Last checked</span>
-                  <strong>Just now</strong>
-                </div>
-                <button onclick="runSystemCheck()">Run a system check</button>
-              </div>
-            </section>
-
-            <section class="metric-grid">
-              <article class="metric-card">
-                <div class="metric-icon blue">⌁</div>
-                <p>Today's usage</p>
-                <h3><span id="todayUsage">428</span> <small>L</small></h3>
-                <span class="trend positive">↓ 12% <em>vs. yesterday</em></span>
-              </article>
-              <article class="metric-card">
-                <div class="metric-icon amber">◴</div>
-                <p>Current flow</p>
-                <h3 id="flowValue">0.8 <small>L/min</small></h3>
-                <span class="subtext">Normal household activity</span>
-              </article>
-              <article class="metric-card">
-                <div class="metric-icon purple">♙</div>
-                <p>Estimated monthly bill</p>
-                <h3><span id="monthlyBill">326</span><small>.40 P</small></h3>
-                <span class="trend positive">↓ 47.60 <em>under budget</em></span>
-              </article>
-              <article class="metric-card">
-                <div class="metric-icon coral">♧</div>
-                <p>Water saved this month</p>
-                <h3><span id="savedAmount">1,240</span> <small>L</small></h3>
-                <span class="trend positive">↑ 18% <em>vs. last month</em></span>
-              </article>
-            </section>
-
-            <section class="dashboard-grid">
-              <article class="panel usage-panel">
-                <div class="panel-heading">
-                  <div>
-                    <h2>Water usage</h2>
-                    <p>Your household's water consumption</p>
-                  </div>
-                  <select id="periodSelect" onchange="updateChart(this.value)" aria-label="Usage period">
-                    <option>This week</option>
-                    <option>Last week</option>
-                    <option>This month</option>
-                  </select>
-                </div>
-                <div class="usage-summary">
-                  <strong id="weeklyTotal">2,892 L</strong>
-                  <span class="trend positive">↓ 8.4%</span>
-                  <small>compared to last week</small>
-                </div>
-                <canvas id="usageChart"></canvas>
-              </article>
-
-              <article class="panel devices-panel">
-                <div class="panel-heading">
-                  <div>
-                    <h2>Your devices</h2>
-                    <p id="deviceCount">2 devices connected</p>
-                  </div>
-                  <a href="#devices" onclick="switchTab('devices')">Manage →</a>
-                </div>
-                <div id="devicesList"></div>
-                <button class="add-device" onclick="openAddDeviceModal()">＋ Add another device</button>
-              </article>
-            </section>
-
-            <section class="bottom-grid">
-              <article class="alert-card" id="alertCard" style="display: none;">
-                <div class="alert-icon">!</div>
-                <div>
-                  <p class="eyebrow">SMART ALERT</p>
-                  <h2 id="alertTitle">Small flow detected at night</h2>
-                  <p id="alertDesc">We noticed a low, continuous flow near your kitchen from 01:14–01:31.</p>
-                  <div>
-                    <button class="primary-button" onclick="viewAlertDetails()">View details</button>
-                    <button class="text-button" onclick="dismissAlert()">Dismiss</button>
-                  </div>
-                </div>
-              </article>
-              <article class="tip-card">
-                <span>✦</span>
-                <div>
-                  <p class="eyebrow">WATER-SAVING TIP</p>
-                  <h2>Check your toilet for silent leaks</h2>
-                  <p>A leaking toilet can waste up to 750 litres a day. The dye test takes only five minutes.</p>
-                  <a href="#tips" onclick="openThothi('How do I check for toilet leaks?')">How to do a dye test →</a>
-                </div>
-              </article>
-            </section>
-          </div>
-
-          <!-- HOUSEHOLDS TAB -->
-          <div class="tab-content" id="households-tab">
-            <div class="welcome-row">
-              <div>
-                <h2>My Households</h2>
-                <p class="subtitle">Manage your water-connected homes.</p>
-              </div>
-              <button class="outline-button" onclick="openAddHouseholdModal()">+ Add Household</button>
-            </div>
-            <div class="households-grid" id="householdsGrid"></div>
-          </div>
-
-          <!-- DEVICES TAB -->
-          <div class="tab-content" id="devices-tab">
-            <div class="welcome-row">
-              <div>
-                <h2>Water Devices</h2>
-                <p class="subtitle">Monitor and manage your water sensors.</p>
-              </div>
-              <button class="outline-button" onclick="openAddDeviceModal()">+ Add Device</button>
-            </div>
-            <div class="devices-grid" id="devicesGrid"></div>
-          </div>
-
-          <!-- ANALYTICS TAB -->
-          <div class="tab-content" id="analytics-tab">
-            <div class="welcome-row">
-              <div>
-                <h2>Water Usage Analytics</h2>
-                <p class="subtitle">Deep dive into your consumption patterns.</p>
-              </div>
-            </div>
-            <div class="analytics-grid">
-              <div class="chart-container">
-                <h3>Monthly Trends</h3>
-                <p>6-month consumption comparison</p>
-                <div class="chart-wrapper">
-                  <canvas id="monthlyChart"></canvas>
-                </div>
-              </div>
-              <div class="chart-container">
-                <h3>Usage by Time</h3>
-                <p>Peak usage hours this week</p>
-                <div class="chart-wrapper">
-                  <canvas id="hourlyChart"></canvas>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- ALERTS TAB -->
-          <div class="tab-content" id="alerts-tab">
-            <div class="welcome-row">
-              <div>
-                <h2>Water Alerts</h2>
-                <p class="subtitle">Smart notifications about your water usage.</p>
-              </div>
-            </div>
-            <div id="alertsList"></div>
-          </div>
-        </section>
-      </main>
-    </div>
-
-    <!-- Thothi Launcher -->
-    <button class="thothi-launcher" id="thothiLauncher" onclick="toggleThothi()" aria-label="Talk to Thothi">
-      <div class="thothi-character">
-        <div class="droplet-body">
-          <div class="droplet-eye"></div>
-          <div class="droplet-eye"></div>
-          <div class="droplet-mouth"></div>
+    <!-- ===== HOUSEHOLDS ===== -->
+    <div class="tab-content" id="households-tab">
+      <div class="hero">
+        <h1>My Households</h1>
+        <p>Manage water monitoring for all your homes.</p>
+        <div class="hero-actions">
+          <button class="btn-primary" onclick="openAddHouseholdModal()">+ Add Household</button>
         </div>
       </div>
-      <span>Ask Thothi</span>
-    </button>
 
-    <!-- Thothi Chat Card -->
-    <section class="thothi-card" id="thothiCard" aria-label="Thothi water assistant" aria-hidden="true">
-      <div class="thothi-head">
-        <div class="thothi-avatar">
-          <div class="thothi-character" style="transform: scale(0.8);">
-            <div class="droplet-body">
-              <div class="droplet-eye"></div>
-              <div class="droplet-eye"></div>
-              <div class="droplet-mouth"></div>
-            </div>
-          </div>
+      <div class="grid" id="householdsGrid">
+        <div style="grid-column:1/-1; text-align:center; padding:40px; color:var(--muted);">
+          <div class="spinner" style="display:inline-block; margin-bottom:16px;"></div>
+          <p>Loading households...</p>
         </div>
-        <div>
-          <strong>Thothi</strong>
-          <small><i></i> Your water buddy</small>
-        </div>
-        <button id="closeThothi" onclick="closeThothi()" aria-label="Close Thothi">×</button>
-      </div>
-      <div class="thothi-message" id="thothiMessage">Hi! I'm Thothi, your water buddy. Your home is flowing beautifully today. Want a quick water-saving tip?</div>
-      <div class="thothi-actions" id="thothiActions">
-        <button data-thothi="tip">Give me a tip</button>
-        <button data-thothi="check">Leak check</button>
-        <button data-thothi="save">Save water</button>
-        <button data-thothi="dance">Do a dance</button>
-      </div>
-      <form class="thothi-form" id="thothiForm" onsubmit="sendThothi(event)">
-        <input id="thothiInput" placeholder="Ask Thothi anything…" autocomplete="off" />
-        <button type="submit" aria-label="Send message">↑</button>
-      </form>
-    </section>
-
-    <!-- Modals -->
-    <div class="modal" id="householdModal">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h3>Add New Household</h3>
-          <button class="modal-close" onclick="closeModal('householdModal')">×</button>
-        </div>
-        <form class="auth-form" onsubmit="addHousehold(event)">
-          <div class="form-group">
-            <label>Household Name</label>
-            <input type="text" id="householdName" placeholder="e.g., Main House" required>
-          </div>
-          <div class="form-group">
-            <label>Address</label>
-            <input type="text" id="householdAddress" placeholder="Street address" required>
-          </div>
-          <div class="form-group">
-            <label>Number of People</label>
-            <input type="number" id="householdPeople" placeholder="4" min="1" required>
-          </div>
-          <button type="submit" class="btn-auth">Create Household</button>
-        </form>
       </div>
     </div>
 
-    <div class="modal" id="deviceModal">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h3>Add New Device</h3>
-          <button class="modal-close" onclick="closeModal('deviceModal')">×</button>
+    <!-- ===== DEVICES ===== -->
+    <div class="tab-content" id="devices-tab">
+      <div class="hero">
+        <h1>Water Devices</h1>
+        <p>Add and manage your water sensors and meters.</p>
+        <div class="hero-actions">
+          <button class="btn-primary" onclick="openAddDeviceModal()">+ Add Device</button>
         </div>
-        <form class="auth-form" onsubmit="addDevice(event)">
-          <div class="form-group">
-            <label>Household</label>
-            <select id="deviceHousehold" required>
-              <option value="">Select household...</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>Device Name</label>
-            <input type="text" id="deviceName" placeholder="e.g., Kitchen Tap" required>
-          </div>
-          <div class="form-group">
-            <label>Device Type</label>
-            <select id="deviceType" required>
-              <option value="Meter">Flow Meter</option>
-              <option value="Tap">Smart Tap</option>
-              <option value="Toilet">Toilet Sensor</option>
-              <option value="Shower">Shower Monitor</option>
-              <option value="Washer">Washing Machine</option>
-            </select>
-          </div>
-          <button type="submit" class="btn-auth">Add Device</button>
-        </form>
+      </div>
+
+      <div class="grid" id="devicesGrid">
+        <div style="grid-column:1/-1; text-align:center; padding:40px; color:var(--muted);">
+          <div class="spinner" style="display:inline-block; margin-bottom:16px;"></div>
+          <p>Loading devices...</p>
+        </div>
       </div>
     </div>
 
-    <div class="toast" role="status" aria-live="polite"></div>
+    <!-- ===== ANALYTICS ===== -->
+    <div class="tab-content" id="analytics-tab">
+      <div class="hero">
+        <h1>Water Usage Analytics</h1>
+        <p>Analyze your consumption patterns and trends.</p>
+      </div>
 
-    <script>
-      // ===== STATE =====
-      const state = {
-        isLoggedIn: false,
-        user: null,
-        households: [],
-        devices: [],
-        alerts: [],
-        isSignUp: false,
-        charts: {}
-      };
+      <div class="grid">
+        <div class="card" style="grid-column:1/-1;">
+          <h3 style="margin-bottom:24px; color:var(--navy); font-family:'Manrope',sans-serif;">Weekly Usage</h3>
+          <canvas id="usageChart" style="max-height:300px;"></canvas>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
 
-      // ===== AUTH =====
-      function handleAuth(e) {
-        e.preventDefault();
-        const email = document.getElementById('authEmail').value.trim();
-        const password = document.getElementById('authPassword').value.trim();
-        const name = document.getElementById('authName').value.trim() || email.split('@')[0];
+<!-- ===== MODALS ===== -->
+<div class="modal" id="householdModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3>Add New Household</h3>
+      <button class="modal-close" onclick="closeModal('householdModal')">×</button>
+    </div>
+    <form class="auth-form" onsubmit="addHousehold(event)">
+      <div class="form-group">
+        <label>Household Name</label>
+        <input type="text" id="householdName" placeholder="e.g., Main House" required>
+      </div>
+      <div class="form-group">
+        <label>Address</label>
+        <input type="text" id="householdAddress" placeholder="Street address" required>
+      </div>
+      <div class="form-group">
+        <label>Number of Occupants</label>
+        <input type="number" id="householdOccupants" placeholder="4" min="1" required>
+      </div>
+      <button type="submit" class="btn-auth">Create Household</button>
+    </form>
+  </div>
+</div>
 
-        if (!email || !password) {
-          toast('Please fill in all fields');
-          return;
-        }
+<div class="modal" id="deviceModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3>Add New Device</h3>
+      <button class="modal-close" onclick="closeModal('deviceModal')">×</button>
+    </div>
+    <form class="auth-form" onsubmit="addDevice(event)">
+      <div class="form-group">
+        <label>Household</label>
+        <select id="deviceHousehold" required>
+          <option value="">Select household...</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Device Name</label>
+        <input type="text" id="deviceName" placeholder="e.g., Kitchen Meter" required>
+      </div>
+      <div class="form-group">
+        <label>Device Type</label>
+        <select id="deviceType" required>
+          <option value="meter">Flow Meter</option>
+          <option value="sensor">Leak Sensor</option>
+          <option value="tap">Smart Tap</option>
+          <option value="toilet">Toilet Monitor</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Location</label>
+        <input type="text" id="deviceLocation" placeholder="e.g., Kitchen" required>
+      </div>
+      <button type="submit" class="btn-auth">Add Device</button>
+    </form>
+  </div>
+</div>
 
-        state.isLoggedIn = true;
-        state.user = { email, name };
+<!-- Toast -->
+<div class="toast" id="toast"></div>
 
-        initializeSampleData();
-        document.getElementById('authOverlay').classList.add('hidden');
-        document.getElementById('appShell').classList.remove('hidden');
-        document.getElementById('userName').textContent = name;
-        document.getElementById('userAvatar').textContent = name.charAt(0).toUpperCase();
-        document.getElementById('userLocation').textContent = 'Gaborone';
+<script>
+// ===== SUPABASE CONFIG =====
+const SUPABASE_URL = 'https://nfpkgjqsykrchpgwrxfx.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5mcGtnanFzeWtyY2hwZ3dyeGZ4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjQzNDEyNzIsImV4cCI6MjA0MDIxNzI3Mn0.1K_0Vqz5Q0G1H5Y8K8L9M0N1O2P3Q4R5S6T7U8V9W';
 
-        setGreeting();
-        renderHouseholds();
-        renderDevices();
-        renderAlerts();
-        setTimeout(() => initializeCharts(), 300);
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        toast(`Welcome, ${name}! 👋`);
-      }
+// ===== STATE =====
+const state = {
+  user: null,
+  households: [],
+  devices: [],
+  isSignUp: false,
+  loading: false
+};
 
-      function toggleAuthMode(e) {
-        e.preventDefault();
-        state.isSignUp = !state.isSignUp;
-        const nameGroup = document.getElementById('nameGroup');
-        const btn = document.getElementById('authBtn');
-        const title = document.getElementById('authTitle');
-        const desc = document.getElementById('authDesc');
-        const toggle = document.getElementById('toggleAuth');
+// ===== AUTH =====
+async function handleAuth(e) {
+  e.preventDefault();
+  const email = document.getElementById('authEmail').value.trim();
+  const password = document.getElementById('authPassword').value.trim();
+  const errorEl = document.getElementById('authError');
+  
+  errorEl.classList.remove('show');
+  
+  if (!email || !password) {
+    showError('Please fill in all fields', errorEl);
+    return;
+  }
 
-        if (state.isSignUp) {
-          nameGroup.style.display = 'block';
-          btn.textContent = 'Create Account';
-          title.textContent = 'Create Your Account';
-          desc.textContent = 'Join thousands monitoring their water.';
-          toggle.textContent = 'Already have an account? Sign in';
-        } else {
-          nameGroup.style.display = 'none';
-          btn.textContent = 'Sign In';
-          title.textContent = 'Welcome to Smart Flow BW';
-          desc.textContent = 'Monitor water, prevent leaks, save costs.';
-          toggle.textContent = "Don't have an account? Create one free";
-        }
-      }
+  try {
+    state.loading = true;
+    document.getElementById('authBtn').disabled = true;
+    
+    if (state.isSignUp) {
+      const name = document.getElementById('authName').value.trim();
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: { data: { full_name: name } }
+      });
+      
+      if (error) throw error;
+      showToast('Account created! Check your email.', 'success');
+      resetAuthForm();
+    } else {
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+      
+      state.user = data.user;
+      await loadUserData();
+      navigateToApp();
+      showToast('Logged in successfully!', 'success');
+    }
+  } catch (error) {
+    console.error('Auth error:', error);
+    showError(error.message || 'Authentication failed', errorEl);
+  } finally {
+    state.loading = false;
+    document.getElementById('authBtn').disabled = false;
+  }
+}
 
-      function logout() {
-        state.isLoggedIn = false;
-        state.user = null;
-        document.getElementById('authOverlay').classList.remove('hidden');
-        document.getElementById('appShell').classList.add('hidden');
-        document.getElementById('authEmail').value = '';
-        document.getElementById('authPassword').value = '';
-        document.getElementById('authName').value = '';
-        toast('Logged out successfully');
-      }
+function showError(msg, el) {
+  el.textContent = msg;
+  el.classList.add('show');
+}
 
-      // ===== SAMPLE DATA =====
-      function initializeSampleData() {
-        state.households = [
-          { id: 1, name: 'Main House', address: 'Gaborone, BW', people: 4, devices: 2 },
-          { id: 2, name: 'Garden House', address: 'Mogoditshane, BW', people: 2, devices: 1 }
-        ];
+async function loadUserData() {
+  try {
+    // Load households
+    const { data: households } = await supabase
+      .from('households')
+      .select('*')
+      .eq('user_id', state.user.id);
+    
+    state.households = households || [];
 
-        state.devices = [
-          { id: 1, household: 1, name: 'Main Meter', type: 'Meter', status: 'Online', reading: '428 L' },
-          { id: 2, household: 1, name: 'Kitchen Tap', type: 'Tap', status: 'Idle', reading: '0.2 L/min' },
-          { id: 3, household: 2, name: 'Garden Meter', type: 'Meter', status: 'Online', reading: '112 L' }
-        ];
+    // Load devices
+    if (state.households.length > 0) {
+      const householdIds = state.households.map(h => h.id);
+      const { data: devices } = await supabase
+        .from('devices')
+        .select('*')
+        .in('household_id', householdIds);
+      
+      state.devices = devices || [];
+    }
 
-        state.alerts = [
-          { id: 1, title: 'Small flow at night', desc: 'Low continuous flow detected 01:14–01:31', severity: 'warning' }
-        ];
-      }
+    renderUI();
+  } catch (error) {
+    console.error('Load error:', error);
+    showToast('Failed to load data: ' + error.message, 'error');
+  }
+}
 
-      // ===== UI FUNCTIONS =====
-      function switchTab(tab) {
-        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-        document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+function toggleAuthMode(e) {
+  e.preventDefault();
+  state.isSignUp = !state.isSignUp;
+  const nameGroup = document.getElementById('nameGroup');
+  const btn = document.getElementById('authBtn');
+  const title = document.getElementById('authTitle');
+  
+  if (state.isSignUp) {
+    nameGroup.style.display = 'block';
+    btn.textContent = 'Create Account';
+    title.textContent = 'Create Your Account';
+  } else {
+    nameGroup.style.display = 'none';
+    btn.textContent = 'Sign In';
+    title.textContent = 'Welcome to Smart Flow BW';
+  }
+}
 
-        const content = document.getElementById(`${tab}-tab`);
-        if (content) {
-          content.classList.add('active');
-          const btn = Array.from(document.querySelectorAll('.tab-btn')).find(b => b.textContent.toLowerCase().includes(tab.split('-')[0]));
-          if (btn) btn.classList.add('active');
+async function logout() {
+  await supabase.auth.signOut();
+  state.user = null;
+  state.households = [];
+  state.devices = [];
+  document.getElementById('authOverlay').classList.remove('hidden');
+  document.getElementById('appWrapper').classList.remove('active');
+  resetAuthForm();
+  showToast('Logged out', 'success');
+}
 
-          if (tab === 'analytics') {
-            setTimeout(initializeCharts, 100);
-          }
-        }
-      }
+function resetAuthForm() {
+  document.getElementById('authForm').reset();
+  document.getElementById('authError').classList.remove('show');
+  state.isSignUp = false;
+  document.getElementById('nameGroup').style.display = 'none';
+  document.getElementById('authTitle').textContent = 'Welcome to Smart Flow BW';
+  document.getElementById('authBtn').textContent = 'Sign In';
+}
 
-      function openModal(id) {
-        document.getElementById(id).classList.add('open');
-      }
+// ===== HOUSEHOLDS =====
+async function addHousehold(e) {
+  e.preventDefault();
+  const name = document.getElementById('householdName').value;
+  const address = document.getElementById('householdAddress').value;
+  const occupants = parseInt(document.getElementById('householdOccupants').value);
 
-      function closeModal(id) {
-        document.getElementById(id).classList.remove('open');
-      }
+  try {
+    const { data, error } = await supabase
+      .from('households')
+      .insert([{
+        user_id: state.user.id,
+        name,
+        address,
+        occupants,
+        created_at: new Date()
+      }])
+      .select();
 
-      function openAddHouseholdModal() {
-        openModal('householdModal');
-      }
+    if (error) throw error;
 
-      function openAddDeviceModal() {
-        openModal('deviceModal');
-        const select = document.getElementById('deviceHousehold');
-        select.innerHTML = '<option value="">Select household...</option>' +
-          state.households.map(h => `<option value="${h.id}">${h.name}</option>`).join('');
-      }
+    state.households.push(data[0]);
+    renderUI();
+    closeModal('householdModal');
+    document.getElementById('householdName').value = '';
+    document.getElementById('householdAddress').value = '';
+    document.getElementById('householdOccupants').value = '';
+    showToast(`${name} added!`, 'success');
+  } catch (error) {
+    showToast('Error: ' + error.message, 'error');
+  }
+}
 
-      function addHousehold(e) {
-        e.preventDefault();
-        const name = document.getElementById('householdName').value.trim();
-        const address = document.getElementById('householdAddress').value.trim();
-        const people = parseInt(document.getElementById('householdPeople').value) || 1;
+async function deleteHousehold(id) {
+  try {
+    await supabase.from('households').delete().eq('id', id);
+    state.households = state.households.filter(h => h.id !== id);
+    state.devices = state.devices.filter(d => d.household_id !== id);
+    renderUI();
+    showToast('Household deleted', 'success');
+  } catch (error) {
+    showToast('Error: ' + error.message, 'error');
+  }
+}
 
-        if (!name || !address) {
-          toast('Please fill in all fields');
-          return;
-        }
+// ===== DEVICES =====
+async function addDevice(e) {
+  e.preventDefault();
+  const householdId = parseInt(document.getElementById('deviceHousehold').value);
+  const name = document.getElementById('deviceName').value;
+  const type = document.getElementById('deviceType').value;
+  const location = document.getElementById('deviceLocation').value;
 
-        const household = {
-          id: Math.max(...state.households.map(h => h.id), 0) + 1,
-          name,
-          address,
-          people,
-          devices: 0
-        };
+  try {
+    const { data, error } = await supabase
+      .from('devices')
+      .insert([{
+        household_id: householdId,
+        name,
+        type,
+        location,
+        status: 'online',
+        created_at: new Date()
+      }])
+      .select();
 
-        state.households.push(household);
-        renderHouseholds();
-        closeModal('householdModal');
-        document.getElementById('householdName').value = '';
-        document.getElementById('householdAddress').value = '';
-        document.getElementById('householdPeople').value = '';
-        toast(`${name} added successfully! 🎉`);
-      }
+    if (error) throw error;
 
-      function addDevice(e) {
-        e.preventDefault();
-        const household = parseInt(document.getElementById('deviceHousehold').value);
-        const name = document.getElementById('deviceName').value.trim();
-        const type = document.getElementById('deviceType').value;
+    state.devices.push(data[0]);
+    renderUI();
+    closeModal('deviceModal');
+    document.getElementById('deviceName').value = '';
+    document.getElementById('deviceLocation').value = '';
+    showToast(`${name} added!`, 'success');
+  } catch (error) {
+    showToast('Error: ' + error.message, 'error');
+  }
+}
 
-        if (!household || !name) {
-          toast('Please fill in all fields');
-          return;
-        }
+async function deleteDevice(id) {
+  try {
+    await supabase.from('devices').delete().eq('id', id);
+    state.devices = state.devices.filter(d => d.id !== id);
+    renderUI();
+    showToast('Device deleted', 'success');
+  } catch (error) {
+    showToast('Error: ' + error.message, 'error');
+  }
+}
 
-        const device = {
-          id: Math.max(...state.devices.map(d => d.id), 0) + 1,
-          household,
-          name,
-          type,
-          status: 'Online',
-          reading: '0 L'
-        };
+// ===== UI =====
+function navigateToApp() {
+  document.getElementById('authOverlay').classList.add('hidden');
+  document.getElementById('appWrapper').classList.add('active');
+  document.getElementById('userName').textContent = state.user.email?.split('@')[0] || 'User';
+  document.getElementById('userAvatar').textContent = (state.user.email?.charAt(0) || 'U').toUpperCase();
+}
 
-        state.devices.push(device);
-        const h = state.households.find(h => h.id === household);
-        if (h) h.devices++;
+function switchTab(tab) {
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+  
+  document.getElementById(`${tab}-tab`).classList.add('active');
+  event.target.classList.add('active');
+}
 
-        renderDevices();
-        renderHouseholds();
-        closeModal('deviceModal');
-        document.getElementById('deviceName').value = '';
-        toast(`${name} added successfully! 🎉`);
-      }
+function openAddHouseholdModal() {
+  openModal('householdModal');
+}
 
-      function renderHouseholds() {
-        const grid = document.getElementById('householdsGrid');
-        grid.innerHTML = state.households.map(h => `
-          <div class="household-card">
-            <div class="card-header">
-              <div class="card-title">🏠 ${h.name}</div>
-              <div class="card-badge">Active</div>
-            </div>
-            <div class="card-info">
-              <div class="info-item">
-                <strong>${h.people}</strong>
-                People
-              </div>
-              <div class="info-item">
-                <strong>${h.devices}</strong>
-                Devices
-              </div>
-            </div>
-            <div style="color: #64748b; font-size: 12px;">📍 ${h.address}</div>
-            <button class="btn-add-item" onclick="selectHousehold(${h.id})">Manage Household</button>
-          </div>
-        `).join('');
-      }
+function openAddDeviceModal() {
+  const select = document.getElementById('deviceHousehold');
+  select.innerHTML = '<option value="">Select household...</option>' +
+    state.households.map(h => `<option value="${h.id}">${h.name}</option>`).join('');
+  openModal('deviceModal');
+}
 
-      function renderDevices() {
-        const grid = document.getElementById('devicesGrid');
-        const list = document.getElementById('devicesList');
+function openModal(id) {
+  document.getElementById(id).classList.add('open');
+}
 
-        const deviceHTML = state.devices.map(d => {
-          const icons = { 'Meter': '📊', 'Tap': '🚰', 'Toilet': '🚽', 'Shower': '🚿', 'Washer': '🧺' };
-          return `
-            <div class="device-card">
-              <div class="card-header">
-                <div class="card-title">${icons[d.type] || '💧'} ${d.name}</div>
-                <div class="card-badge">${d.status}</div>
-              </div>
-              <div class="card-info">
-                <div class="info-item">
-                  <strong>${d.reading}</strong>
-                  Reading
-                </div>
-                <div class="info-item">
-                  <strong>${d.type}</strong>
-                  Type
-                </div>
-              </div>
-            </div>
-          `;
-        }).join('');
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
 
-        grid.innerHTML = deviceHTML;
-        list.innerHTML = state.devices.slice(0, 2).map(d => {
-          const icons = { 'Meter': '⌘', 'Tap': '⚙', 'Toilet': '⚙', 'Shower': '⚙', 'Washer': '⚙' };
-          return `
-            <div class="device" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #e3ebf3;">
-              <div style="display: flex; gap: 12px; align-items: center;">
-                <div style="font-size: 24px;">${icons[d.type]}</div>
-                <div>
-                  <strong>${d.name}</strong>
-                  <p style="font-size: 12px; color: #64748b;">${d.status === 'Online' ? 'Connected' : 'Idle'}</p>
-                </div>
-              </div>
-              <span class="device-status" style="background: #e3ebf3; padding: 6px 12px; border-radius: 6px; font-size: 11px; font-weight: 600;">${d.status}</span>
-            </div>
-          `;
-        }).join('');
+function renderUI() {
+  // Households
+  const householdsGrid = document.getElementById('householdsGrid');
+  householdsGrid.innerHTML = state.households.length ? 
+    state.households.map(h => `
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">🏠 ${h.name}</div>
+          <div class="card-badge">${h.occupants} people</div>
+        </div>
+        <div class="card-info">📍 ${h.address}</div>
+        <div class="card-actions">
+          <button class="btn-small" onclick="deleteHousehold(${h.id})">Delete</button>
+        </div>
+      </div>
+    `).join('') :
+    '<div style="grid-column:1/-1; text-align:center; padding:40px; color:var(--muted);">No households yet. Add one!</div>';
 
-        document.getElementById('deviceCount').textContent = `${state.devices.length} devices connected`;
-      }
+  // Devices
+  const devicesGrid = document.getElementById('devicesGrid');
+  devicesGrid.innerHTML = state.devices.length ?
+    state.devices.map(d => `
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">⌘ ${d.name}</div>
+          <div class="card-badge">${d.type}</div>
+        </div>
+        <div class="card-info">📍 ${d.location}</div>
+        <div class="card-info" style="margin-top:8px;">Household: ${state.households.find(h => h.id === d.household_id)?.name}</div>
+        <div class="card-actions">
+          <button class="btn-small" onclick="deleteDevice(${d.id})">Delete</button>
+        </div>
+      </div>
+    `).join('') :
+    '<div style="grid-column:1/-1; text-align:center; padding:40px; color:var(--muted);">No devices yet. Add one!</div>';
+}
 
-      function renderAlerts() {
-        const list = document.getElementById('alertsList');
-        list.innerHTML = state.alerts.map(a => `
-          <div class="alert-card">
-            <div class="alert-icon">!</div>
-            <div>
-              <p class="eyebrow">${a.severity.toUpperCase()}</p>
-              <h2>${a.title}</h2>
-              <p>${a.desc}</p>
-              <div>
-                <button class="primary-button" onclick="viewAlertDetails()">View details</button>
-                <button class="text-button" onclick="dismissAlert()">Dismiss</button>
-              </div>
-            </div>
-          </div>
-        `).join('');
+function showToast(msg, type = 'info') {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.className = `toast show ${type}`;
+  setTimeout(() => toast.classList.remove('show'), 3000);
+}
 
-        if (state.alerts.length > 0) {
-          document.getElementById('alertCard').style.display = 'flex';
-          document.getElementById('alertCount').textContent = state.alerts.length;
-        }
-      }
+// ===== INIT =====
+async function init() {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (session) {
+    state.user = session.user;
+    await loadUserData();
+    navigateToApp();
+  }
+}
 
-      function selectHousehold(id) {
-        toast(`Selected: ${state.households.find(h => h.id === id).name}`);
-      }
+window.addEventListener('load', init);
+</script>
 
-      function runSystemCheck() {
-        toast('🔍 Running system check...');
-        setTimeout(() => toast('✓ All systems operational!'), 2000);
-      }
-
-      function downloadReport() {
-        toast('📊 Downloading report...');
-      }
-
-      function viewAlertDetails() {
-        toast('📋 Loading alert details...');
-      }
-
-      function dismissAlert() {
-        state.alerts = [];
-        renderAlerts();
-        toast('Alert dismissed');
-      }
-
-      function toggleAlerts() {
-        switchTab('alerts');
-      }
-
-      // ===== CHARTS =====
-      function initializeCharts() {
-        // Usage Chart
-        const usageCtx = document.getElementById('usageChart');
-        if (usageCtx && usageCtx.getContext && !state.charts.usage) {
-          state.charts.usage = new Chart(usageCtx, {
-            type: 'line',
-            data: {
-              labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-              datasets: [{
-                label: 'Daily Usage (L)',
-                data: [385, 428, 412, 395, 456, 520, 380],
-                borderColor: '#0b6bcb',
-                backgroundColor: 'rgba(11, 107, 203, 0.1)',
-                borderWidth: 3,
-                fill: true,
-                tension: 0.4,
-                pointRadius: 5,
-                pointBackgroundColor: '#0b6bcb',
-                pointBorderColor: '#fff',
-                pointBorderWidth: 2
-              }]
-            },
-            options: {
-              responsive: true,
-              maintainAspectRatio: false,
-              plugins: { legend: { display: false } },
-              scales: {
-                y: { beginAtZero: true, max: 600, ticks: { stepSize: 100 } }
-              }
-            }
-          });
-        }
-
-        // Monthly Chart
-        const monthlyCtx = document.getElementById('monthlyChart');
-        if (monthlyCtx && monthlyCtx.getContext && !state.charts.monthly) {
-          state.charts.monthly = new Chart(monthlyCtx, {
-            type: 'bar',
-            data: {
-              labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-              datasets: [{
-                label: 'Monthly Usage (L)',
-                data: [8920, 9240, 8840, 9120, 9560, 8980],
-                backgroundColor: 'rgba(11, 107, 203, 0.7)',
-                borderColor: '#0b6bcb',
-                borderWidth: 2,
-                borderRadius: 8
-              }]
-            },
-            options: {
-              responsive: true,
-              maintainAspectRatio: false,
-              plugins: { legend: { display: false } },
-              scales: { y: { beginAtZero: true } }
-            }
-          });
-        }
-
-        // Hourly Chart
-        const hourlyCtx = document.getElementById('hourlyChart');
-        if (hourlyCtx && hourlyCtx.getContext && !state.charts.hourly) {
-          state.charts.hourly = new Chart(hourlyCtx, {
-            type: 'radar',
-            data: {
-              labels: ['12am', '3am', '6am', '9am', '12pm', '3pm', '6pm', '9pm'],
-              datasets: [{
-                label: 'Usage (L)',
-                data: [5, 3, 15, 45, 120, 65, 85, 35],
-                borderColor: '#0b6bcb',
-                backgroundColor: 'rgba(11, 107, 203, 0.2)',
-                borderWidth: 2
-              }]
-            },
-            options: {
-              responsive: true,
-              maintainAspectRatio: false,
-              plugins: { legend: { display: false } }
-            }
-          });
-        }
-      }
-
-      function updateChart(period) {
-        toast(`Showing usage for: ${period}`);
-      }
-
-      // ===== THOTHI =====
-      function toggleThothi() {
-        const card = document.getElementById('thothiCard');
-        card.classList.toggle('open');
-        if (card.classList.contains('open')) {
-          document.getElementById('thothiInput').focus();
-        }
-      }
-
-      function closeThothi() {
-        document.getElementById('thothiCard').classList.remove('open');
-      }
-
-      function openThothi(seed = '') {
-        toggleThothi();
-        if (seed) {
-          setTimeout(() => sendThothi(null, seed), 100);
-        }
-      }
-
-      function sendThothi(e, seed = '') {
-        if (e) e.preventDefault();
-        const input = document.getElementById('thothiInput');
-        const msg = seed || input.value.trim();
-        if (!msg) return;
-
-        const msgEl = document.createElement('div');
-        msgEl.style.cssText = 'padding: 12px 16px; background: #0b6bcb; color: white; border-radius: 12px; margin: 8px 0; max-width: 80%;';
-        msgEl.textContent = msg;
-        document.getElementById('thothiMessage').insertAdjacentElement('afterend', msgEl);
-
-        input.value = '';
-
-        setTimeout(() => {
-          const response = generateThothi Response(msg);
-          const respEl = document.createElement('div');
-          respEl.style.cssText = 'padding: 12px 16px; background: #e3ebf3; color: #09243f; border-radius: 12px; margin: 8px 0; max-width: 80%;';
-          respEl.textContent = response;
-          msgEl.insertAdjacentElement('afterend', respEl);
-        }, 600);
-      }
-
-      function generateThothiResponse(q) {
-        const x = q.toLowerCase();
-        if (x.includes('tip')) return '💡 Fix leaking toilets first—they waste up to 750L/day!';
-        if (x.includes('leak') || x.includes('check')) return '🔍 Safe leak check: Stop all water use, wait 15-30 min, check meter. Any movement = possible leak.';
-        if (x.includes('save')) return '💧 Quick wins: Fix drips, shorter showers, full loads only. You\'ve already saved 18% this month!';
-        if (x.includes('dance')) return '🎉 *Thothi does a happy water dance* ~~~o~~~o~~~';
-        return '💬 Great question! I can help with leak checks, saving tips, usage analysis, and more. Try asking me!';
-      }
-
-      // ===== UTILITIES =====
-      function setGreeting() {
-        const h = new Date().getHours();
-        const greeting = h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening';
-        document.getElementById('greeting').textContent = `${greeting} ${state.user.name}`;
-        
-        const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-        const today = new Date();
-        document.getElementById('todayDate').textContent = `${days[today.getDay()]}, ${today.getDate()} ${['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'][today.getMonth()]}`;
-      }
-
-      function toast(msg) {
-        const t = document.querySelector('.toast');
-        t.textContent = msg;
-        t.style.opacity = '1';
-        t.style.visibility = 'visible';
-        clearTimeout(window.toastTimeout);
-        window.toastTimeout = setTimeout(() => {
-          t.style.opacity = '0';
-          t.style.visibility = 'hidden';
-        }, 3000);
-      }
-
-      // Initialize
-      setGreeting();
-    </script>
-  </body>
+</body>
 </html>
