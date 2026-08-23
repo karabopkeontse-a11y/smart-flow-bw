@@ -13,7 +13,10 @@ public class MainActivity extends Activity {
     WebSettings settings = view.getSettings();
     settings.setJavaScriptEnabled(true);
     settings.setDomStorageEnabled(true);
+    settings.setAllowFileAccess(true);
+    settings.setAllowContentAccess(false);
     view.setWebViewClient(new WebViewClient());
+    view.setOverScrollMode(WebView.OVER_SCROLL_NEVER);
     view.loadUrl("file:///android_asset/index.html");
     setContentView(view);
   }
