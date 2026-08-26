@@ -39,4 +39,5 @@ function runScenario(){let start=S.hour;let i=0;let timer=setInterval(()=>{S.hou
 function sendChat(){let input=$('chatInput'),q=input.value.trim();if(!q)return;let box=$('chat'),u=document.createElement('div');u.className='msg user';u.textContent=q;box.appendChild(u);let m=model(),answer='';let l=q.toLowerCase();if(l.includes('bill')||l.includes('cost'))answer='Right now my estimate is P'+$('billForecast').textContent.replace('P','')+'. That is a Smart Flow prototype estimate, not an official WUC bill.';else if(l.includes('leak'))answer=m.sev?'I am concerned about the current pattern. '+m.text:'I do not see a leak pattern in this scenario. Try Overnight leak and ask me again.';else if(l.includes('why'))answer=m.text;else answer=m.title+' '+m.text;let a=document.createElement('div');a.className='msg thothi';a.textContent=answer;box.appendChild(a);box.scrollTop=box.scrollHeight;input.value='';if(m.sev==='critical'){let c=$('thothiChar');c.classList.add('concerned');setTimeout(()=>c.classList.remove('concerned'),1200)}}
 setInterval(()=>{let c=$('thothiChar');c.querySelectorAll('.eye').forEach(e=>e.classList.add('blink'));setTimeout(()=>c.querySelectorAll('.eye').forEach(e=>e.classList.remove('blink')),150)},4200);
 renderAll();
-</script></body></html>
+</script><script src="./auth-admin.js"></script>
+</body></html>
