@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Synchronize HTML and app assets
+      - name: Synchronize web HTML and account asset without replacing Android demo
         run: |
           python3 - <<'PY'
           from pathlib import Path
@@ -21,14 +21,12 @@ jobs:
               root.write_text(text.replace('</body>',tag+'\n</body>'))
           assets=Path('android/app/src/main/assets')
           assets.mkdir(parents=True,exist_ok=True)
-          (assets/'index.html').write_text(root.read_text())
-          (assets/'local-core.js').write_text(Path('local-core.js').read_text())
           (assets/'auth-admin.js').write_text(Path('auth-admin.js').read_text())
           PY
           git config user.name 'smart-flow-build-bot'
           git config user.email 'actions@users.noreply.github.com'
-          git add index.html android/app/src/main/assets/index.html android/app/src/main/assets/local-core.js android/app/src/main/assets/auth-admin.js
-          if ! git diff --cached --quiet; then git commit -m 'Sync Smart Flow HTML and Android account assets [skip ci]'; git push; fi
+          git add index.html android/app/src/main/assets/auth-admin.js
+          if ! git diff --cached --quiet; then git commit -m 'Sync Smart Flow HTML and account layer [skip ci]'; git push; fi
       - name: Smoke test offline Smart Flow demo
         run: python3 scripts/smoke_test.py
       - uses: actions/setup-java@v4
