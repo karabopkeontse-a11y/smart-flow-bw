@@ -1,0 +1,1 @@
+Smart Flow account/authentication build synchronization trigger. The workflow uses this file to force a web HTML + Android asset sync without waiting for Lovable.
