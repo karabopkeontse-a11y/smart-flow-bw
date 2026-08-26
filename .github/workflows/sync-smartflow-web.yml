@@ -5,6 +5,7 @@ on:
       - 'auth-admin.js'
       - 'local-core.js'
       - 'index.html'
+      - 'build-trigger.txt'
 permissions:
   contents: write
 jobs:
