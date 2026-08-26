@@ -18,7 +18,7 @@ public class MainActivity extends Activity {
     view.setWebViewClient(new WebViewClient() {
       @Override public void onPageFinished(WebView v, String url) {
         super.onPageFinished(v, url);
-        v.evaluateJavascript("(function(){if(window.__sfLocalLoaded)return;window.__sfLocalLoaded=true;var s=document.createElement('script');s.src='file:///android_asset/local-core.js';document.head.appendChild(s);})();", null);
+        v.evaluateJavascript("(function(){if(window.__sfLocalLoaded)return;window.__sfLocalLoaded=true;var a=document.createElement('script');a.src='file:///android_asset/local-core.js';document.head.appendChild(a);var b=document.createElement('script');b.src='file:///android_asset/auth-admin.js';document.head.appendChild(b);})();", null);
       }
     });
     view.setOverScrollMode(WebView.OVER_SCROLL_NEVER);
