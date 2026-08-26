@@ -22,22 +22,12 @@ required = [
 ]
 missing = [x for x in required if x not in text]
 if missing:
-    raise SystemExit('Missing required demo features: ' + ', '.join(missing))
+    raise SystemExit('Missing required current demo features: ' + ', '.join(missing))
 
-# Account layer must be present in the APK asset set.
-for x in [
-    'indexedDB.open',
-    'admin@smartflow.local',
-    'SmartFlowAdmin!2026',
-    'createUser',
-    'sfAdminUI',
-    'sfHouseholdUI',
-    'sfOpenAccount',
-]:
+for x in ['indexedDB.open','admin@smartflow.local','SmartFlowAdmin!2026','createUser','sfAdminUI','sfHouseholdUI','sfOpenAccount']:
     if x not in auth_text:
         raise SystemExit(f'Missing account-layer feature: {x}')
 
-# APK demo must remain usable offline: no remote JS/CSS dependencies.
 remote_scripts = re.findall(r'<script[^>]+src=[\"\']https?://', text, flags=re.I)
 if remote_scripts:
     raise SystemExit('Offline APK contains remote script dependencies')
@@ -45,9 +35,9 @@ if remote_scripts:
 if 'auth-admin.js' not in text:
     raise SystemExit('auth-admin.js is not wired into the APK HTML')
 
-for tag in ['<html', '<head', '<body', '</html>', 'id="messages"']:
+for tag in ['<html','<head','<body','</html>','id="modal"','id="thothi"']:
     if tag not in text:
-        raise SystemExit(f'Missing HTML structure: {tag}')
+        raise SystemExit(f'Missing current HTML structure: {tag}')
 
 print('Smart Flow BW offline demo + account smoke test: PASS')
 print(f'Asset size: {len(text):,} bytes')
