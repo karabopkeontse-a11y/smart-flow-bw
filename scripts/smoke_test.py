@@ -19,4 +19,4 @@ for tag in ['<html','<head','<body','</html>']:
 tabs=re.findall(r'data-tab="([^"]+)"',text); screens=re.findall(r'<section id="([^"]+)"',text)
 for expected in ['overview','bill','alerts','thothi','save','devices']:
  if expected not in tabs or expected not in screens: raise SystemExit(f'Missing navigation/screen: {expected}')
-print('Smart Flow BW offline + accounts + runtime smoke test: PASS'); print(f'Asset size: {len(text):,} bytes'); print('Guest preview, sign-in, sign-up, admin, households, devices, simulation and Thothi surfaces present.')
+print('Smart Flow BW offline + accounts + runtime smoke test: PASS'); print(f'Asset size: {len(text):,} bytes'); print('Guest preview, sign-in, sign-up, admin, households, devices, simulation and Thothi surfaces present.'); print('Shared web/Android runtime asset is present and validated.')
