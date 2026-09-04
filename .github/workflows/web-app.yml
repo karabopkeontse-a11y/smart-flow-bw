@@ -1,40 +1,34 @@
 name: Build and Deploy Smart Flow BW Web App
-
 on:
   push:
     branches: [main]
   workflow_dispatch:
-
 permissions:
   contents: read
   pages: write
   id-token: write
-
 concurrency:
   group: pages
   cancel-in-progress: true
-
 jobs:
   build-web:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
       - name: Validate web JavaScript
         run: |
           node --check app.js
           node --check local-core.js
           node --check auth-admin.js
-
+          node --check smartflow-runtime.js
       - name: Smoke test offline Smart Flow demo
         run: python3 scripts/smoke_test.py
-
       - name: Assemble web app
         run: |
           rm -rf site
           mkdir -p site
-          cp index.html app.js local-core.js auth-admin.js manifest.webmanifest icon.svg site/
+          cp index.html app.js local-core.js auth-admin.js smartflow-runtime.js manifest.webmanifest icon.svg site/
           if [ -f sw.js ]; then cp sw.js site/; fi
           if [ -f service-worker.js ]; then cp service-worker.js site/; fi
           if [ -d assets ]; then cp -R assets site/; fi
@@ -43,22 +37,19 @@ jobs:
 <html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="refresh" content="0;url=./"></head><body>Smart Flow BW</body></html>
 EOF
           test -s site/index.html
-
+          test -s site/smartflow-runtime.js
       - name: Upload downloadable web artifact
         uses: actions/upload-artifact@v4
         with:
           name: Smart-Flow-BW-Web-App
           path: site/
           retention-days: 30
-
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
-
       - name: Upload Pages bundle
         uses: actions/upload-pages-artifact@v3
         with:
           path: site/
-
   deploy:
     needs: build-web
     runs-on: ubuntu-latest
