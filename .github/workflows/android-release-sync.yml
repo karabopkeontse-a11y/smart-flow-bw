@@ -1,0 +1,46 @@
+name: Smart Flow BW Android Release Sync
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Sync tested web app into Android assets
+        run: |
+          cp index.html android/app/src/main/assets/index.html
+          cp auth-admin.js android/app/src/main/assets/auth-admin.js
+          cp smartflow-runtime.js android/app/src/main/assets/smartflow-runtime.js
+          cp local-core.js android/app/src/main/assets/local-core.js
+          cmp index.html android/app/src/main/assets/index.html
+      - name: Validate source
+        run: |
+          node --check auth-admin.js
+          node --check smartflow-runtime.js
+          node --check local-core.js
+          python3 scripts/smoke_test.py
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.10.2'
+      - name: Build debug APK
+        working-directory: android
+        run: gradle :app:assembleDebug
+      - name: Package APK
+        run: |
+          mkdir -p release
+          cp android/app/build/outputs/apk/debug/app-debug.apk release/Smart-Flow-BW-Thothi-debug.apk
+          cp README.md release/README.md
+          cd release
+          zip -9 Smart-Flow-BW-Thothi-Package.zip Smart-Flow-BW-Thothi-debug.apk README.md
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Smart-Flow-BW-Thothi-App-Package
+          path: release/
