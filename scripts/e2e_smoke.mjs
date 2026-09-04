@@ -33,7 +33,8 @@ try {
   await page.locator('#suggestions .prompt').filter({hasText:'What am I looking at?'}).click(); await wait(350);
   if(!(await page.locator('#chat').innerText()).includes('Smart Flow command view')) fail('Thothi guided question did not produce deterministic answer');
   await page.locator('[data-tab="save"]').click();
-  await page.locator('button:has-text("+ Add action")').click();
+  await page.getByRole('button',{name:'+ Add action',exact:true}).click();
+  await page.locator('#sfRuntimeModal').waitFor({state:'visible'});
   await page.locator('input[name="text"]').fill('E2E test saving action');
   await page.locator('.sf-box button:has-text("Add action")').click(); await wait(200);
   if(!(await page.locator('#tasks').innerText()).includes('E2E test saving action')) fail('Add Action failed');
