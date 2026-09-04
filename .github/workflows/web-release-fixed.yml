@@ -1,0 +1,43 @@
+name: Smart Flow BW Web Release Fixed
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate app surface and inline runtime
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          t=Path('index.html').read_text(encoding='utf-8')
+          required=['Smart Flow BW','Before Your Bill','Thothi','Overnight leak','High flow / burst risk','Usage improving','Evening spike','id="overview"','id="alerts"','id="save"','id="devices"','id="account"','Run 24h','Add Action','Add device','Normal user','Administrator']
+          missing=[x for x in required if x not in t]
+          if missing: raise SystemExit('Missing: '+', '.join(missing))
+          blocks=re.findall(r'<script>\n(.*?)\n</script>',t,re.S)
+          if not blocks: raise SystemExit('No inline application runtime found')
+          Path('/tmp/smartflow-inline.js').write_text(blocks[0],encoding='utf-8')
+          PY
+          node --check /tmp/smartflow-inline.js
+          node --check auth-admin.js
+          node --check smartflow-runtime.js
+      - name: Build downloadable web app
+        run: |
+          rm -rf site
+          mkdir site
+          cp index.html auth-admin.js smartflow-runtime.js local-core.js manifest.webmanifest icon.svg site/
+          [ ! -f sw.js ] || cp sw.js site/
+          cd site
+          zip -9 ../Smart-Flow-BW-Web-App.zip *
+          cd ..
+          unzip -t Smart-Flow-BW-Web-App.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Smart-Flow-BW-Web-App-Fixed
+          path: Smart-Flow-BW-Web-App.zip
+          retention-days: 30
