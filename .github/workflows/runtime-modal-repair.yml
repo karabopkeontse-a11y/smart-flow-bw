@@ -1,0 +1,24 @@
+name: Smart Flow BW Runtime Modal Repair
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch self-contained runtime modal
+        run: python3 scripts/runtime_modal_patch.py
+      - name: Validate runtime
+        run: node --check smartflow-runtime.js
+      - name: Sync Android runtime
+        run: cp smartflow-runtime.js android/app/src/main/assets/smartflow-runtime.js
+      - name: Persist repair
+        run: |
+          git config user.name 'smart-flow-runtime-repair'
+          git config user.email 'actions@users.noreply.github.com'
+          git add smartflow-runtime.js android/app/src/main/assets/smartflow-runtime.js
+          if git diff --cached --quiet; then echo 'Runtime modal already healthy.'; else git commit -m 'Harden Smart Flow runtime modal [skip ci]'; git push; fi
