@@ -10,28 +10,28 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Synchronize web HTML and account asset without replacing Android demo
+      - name: Synchronize shared web runtime into Android assets
         run: |
           python3 - <<'PY'
           from pathlib import Path
           root=Path('index.html')
-          asset=Path('android/app/src/main/assets/index.html')
+          asset=Path('android/app/src/main/assets')
+          asset.mkdir(parents=True,exist_ok=True)
           text=root.read_text(encoding='utf-8')
-          tag='<script src="./auth-admin.js"></script>'
-          if tag not in text:
-              text=text.replace('</body>',tag+'\n</body>')
-              root.write_text(text,encoding='utf-8')
-          asset.parent.mkdir(parents=True,exist_ok=True)
-          # Keep the web and APK HTML identical so every build contains the latest UI.
-          asset.write_text(text,encoding='utf-8')
-          (asset.parent/'auth-admin.js').write_text(Path('auth-admin.js').read_text(encoding='utf-8'),encoding='utf-8')
+          for name in ['index.html','auth-admin.js','smartflow-runtime.js','local-core.js']:
+              src=Path(name)
+              if src.exists():
+                  (asset/name).write_text(src.read_text(encoding='utf-8'),encoding='utf-8')
           PY
           git config user.name 'smart-flow-build-bot'
           git config user.email 'actions@users.noreply.github.com'
-          git add index.html android/app/src/main/assets/index.html android/app/src/main/assets/auth-admin.js
-          if ! git diff --cached --quiet; then git commit -m 'Sync Smart Flow HTML and account layer [skip ci]'; git push; fi
-      - name: Validate account layer JavaScript
-        run: node --check auth-admin.js
+          git add android/app/src/main/assets/index.html android/app/src/main/assets/auth-admin.js android/app/src/main/assets/smartflow-runtime.js android/app/src/main/assets/local-core.js
+          if ! git diff --cached --quiet; then git commit -m 'Sync shared Smart Flow web runtime into Android assets [skip ci]'; git push; fi
+      - name: Validate JavaScript runtime
+        run: |
+          node --check auth-admin.js
+          node --check smartflow-runtime.js
+          node --check local-core.js
       - name: Smoke test offline Smart Flow demo
         run: python3 scripts/smoke_test.py
       - uses: actions/setup-java@v4
