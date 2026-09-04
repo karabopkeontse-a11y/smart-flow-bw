@@ -1,0 +1,24 @@
+name: Smart Flow BW Thothi Repair
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Repair guided Thothi prompt click handling
+        run: python3 scripts/thothi_patch.py
+      - name: Validate repaired runtime
+        run: node --check smartflow-runtime.js
+      - name: Sync Android runtime asset
+        run: cp smartflow-runtime.js android/app/src/main/assets/smartflow-runtime.js
+      - name: Persist repair if needed
+        run: |
+          git config user.name 'smart-flow-thothi-repair'
+          git config user.email 'actions@users.noreply.github.com'
+          git add smartflow-runtime.js android/app/src/main/assets/smartflow-runtime.js
+          if git diff --cached --quiet; then echo 'Thothi prompt wiring already healthy.'; else git commit -m 'Repair Thothi guided prompt interactions [skip ci]'; git push; fi
