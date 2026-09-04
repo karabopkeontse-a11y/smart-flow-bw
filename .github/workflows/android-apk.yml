@@ -4,29 +4,18 @@ on:
     branches: [main]
   workflow_dispatch:
 permissions:
-  contents: write
+  contents: read
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Synchronize shared web runtime into Android assets
+      - name: Verify shared web and Android assets are synchronized
         run: |
-          python3 - <<'PY'
-          from pathlib import Path
-          root=Path('index.html')
-          asset=Path('android/app/src/main/assets')
-          asset.mkdir(parents=True,exist_ok=True)
-          text=root.read_text(encoding='utf-8')
-          for name in ['index.html','auth-admin.js','smartflow-runtime.js','local-core.js']:
-              src=Path(name)
-              if src.exists():
-                  (asset/name).write_text(src.read_text(encoding='utf-8'),encoding='utf-8')
-          PY
-          git config user.name 'smart-flow-build-bot'
-          git config user.email 'actions@users.noreply.github.com'
-          git add android/app/src/main/assets/index.html android/app/src/main/assets/auth-admin.js android/app/src/main/assets/smartflow-runtime.js android/app/src/main/assets/local-core.js
-          if ! git diff --cached --quiet; then git commit -m 'Sync shared Smart Flow web runtime into Android assets [skip ci]'; git push; fi
+          cmp index.html android/app/src/main/assets/index.html
+          cmp auth-admin.js android/app/src/main/assets/auth-admin.js
+          cmp smartflow-runtime.js android/app/src/main/assets/smartflow-runtime.js
+          cmp local-core.js android/app/src/main/assets/local-core.js
       - name: Validate JavaScript runtime
         run: |
           node --check auth-admin.js
