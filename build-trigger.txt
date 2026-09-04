@@ -1,3 +1,3 @@
 Smart Flow BW build trigger
-v3 runtime + synchronized web/Android + smoke validation
-2026-09-04T09:36:00+02:00
+final synchronized validation after v3 runtime and device-panel repair
+2026-09-04T09:46:00+02:00
