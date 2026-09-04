@@ -1,0 +1,74 @@
+name: Smart Flow BW Deployable Release
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply release hardening
+        run: python3 scripts/hardening.py
+      - name: Sync Android assets from web source of truth
+        run: |
+          mkdir -p android/app/src/main/assets
+          cp index.html auth-admin.js smartflow-runtime.js local-core.js android/app/src/main/assets/
+      - name: Validate JavaScript
+        run: |
+          node --check app.js
+          node --check auth-admin.js
+          node --check smartflow-runtime.js
+          node --check local-core.js
+      - name: Static feature smoke test
+        run: python3 scripts/smoke_test.py
+      - name: Install Playwright and Chromium
+        run: |
+          npm install --no-save playwright
+          npx playwright install --with-deps chromium
+      - name: Behavioural smoke test
+        run: node scripts/e2e_smoke.mjs
+      - name: Build Android debug APK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.10.2'
+      - name: Assemble APK
+        working-directory: android
+        run: gradle :app:assembleDebug
+      - name: Assemble deployable web package
+        run: |
+          rm -rf release-web
+          mkdir -p release-web
+          cp index.html auth-admin.js smartflow-runtime.js local-core.js manifest.webmanifest icon.svg sw.js release-web/
+          cat > release-web/README.txt <<'EOF'
+          Smart Flow BW — deployable offline web/PWA prototype
+          Open index.html in a modern browser or serve this folder from a static host. The package contains synchronized Thothi intelligence, simulation, alerts, Save Water actions, accounts, households, devices and readings.
+          EOF
+          cd release-web
+          zip -9 ../Smart-Flow-BW-Deployable-Web.zip *
+      - name: Package APK
+        run: |
+          mkdir -p release
+          cp android/app/build/outputs/apk/debug/app-debug.apk release/Smart-Flow-BW-Thothi-debug.apk
+          cp Smart-Flow-BW-Deployable-Web.zip release/
+          cp README.md release/README.md
+          cd release
+          sha256sum * > SHA256SUMS.txt
+      - name: Upload deployable release
+        uses: actions/upload-artifact@v4
+        with:
+          name: Smart-Flow-BW-Deployable-Release
+          path: release/
+          retention-days: 30
+      - name: Persist hardened source and Android synchronization
+        run: |
+          git config user.name 'smart-flow-release-bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add index.html auth-admin.js smartflow-runtime.js local-core.js sw.js android/app/src/main/assets/ scripts/
+          if git diff --cached --quiet; then echo 'Source already hardened and synchronized.'; else git commit -m 'Persist deployable Smart Flow release hardening [skip ci]'; git push; fi
