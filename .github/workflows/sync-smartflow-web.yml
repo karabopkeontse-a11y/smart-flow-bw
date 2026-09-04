@@ -4,6 +4,7 @@ on:
     paths:
       - 'auth-admin.js'
       - 'local-core.js'
+      - 'smartflow-runtime.js'
       - 'index.html'
       - 'build-trigger.txt'
 permissions:
@@ -14,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Inject account layer into HTML and Android assets
+      - name: Inject and synchronize shared app assets
         shell: bash
         run: |
           python3 - <<'PY'
@@ -27,14 +28,14 @@ jobs:
               p.write_text(t)
           a=Path('android/app/src/main/assets')
           a.mkdir(parents=True,exist_ok=True)
-          (a/'index.html').write_text(p.read_text())
-          (a/'local-core.js').write_text(Path('local-core.js').read_text())
-          (a/'auth-admin.js').write_text(Path('auth-admin.js').read_text())
+          for name in ['index.html','local-core.js','auth-admin.js','smartflow-runtime.js']:
+              src=Path(name)
+              if src.exists(): (a/name).write_text(src.read_text())
           PY
       - name: Commit synchronized assets
         run: |
           git config user.name 'smart-flow-build-bot'
           git config user.email 'actions@users.noreply.github.com'
-          git add index.html android/app/src/main/assets/index.html android/app/src/main/assets/local-core.js android/app/src/main/assets/auth-admin.js
-          git diff --cached --quiet || git commit -m 'Sync web HTML and Android assets with account layer'
+          git add index.html android/app/src/main/assets/index.html android/app/src/main/assets/local-core.js android/app/src/main/assets/auth-admin.js android/app/src/main/assets/smartflow-runtime.js
+          git diff --cached --quiet || git commit -m 'Sync web HTML and Android assets'
           git push
