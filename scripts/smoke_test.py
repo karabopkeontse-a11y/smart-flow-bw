@@ -3,13 +3,13 @@ import re
 asset=Path('android/app/src/main/assets/index.html'); auth=Path('android/app/src/main/assets/auth-admin.js'); runtime=Path('android/app/src/main/assets/smartflow-runtime.js')
 if not asset.exists() or not auth.exists() or not runtime.exists(): raise SystemExit('Required Smart Flow APK assets are missing')
 text=asset.read_text(encoding='utf-8'); auth_text=auth.read_text(encoding='utf-8'); runtime_text=runtime.read_text(encoding='utf-8')
-required=['Smart Flow BW','Water intelligence with Thothi AI','Before Your Bill','Thothi','Overnight leak','High flow / burst risk','Usage improving','Evening spike','id="thothi"','id="overview"','id="alerts"','id="save"','id="devices"','id="devicePanel"','Sign in / Sign up']
+required=['Smart Flow BW','Water intelligence with Thothi AI','Before Your Bill','Thothi','Overnight leak','High flow / burst risk','Usage improving','Evening spike','id="thothi"','id="overview"','id="alerts"','id="save"','id="devices"','id="devicePanel"','Sign in / Sign up','data-action="prev"','data-action="next"','data-action="run"']
 missing=[x for x in required if x not in text]
 if missing: raise SystemExit('Missing required current demo features: '+', '.join(missing))
-account_features=['indexedDB.open','admin@smartflow.local','SmartFlowAdmin!2026','createUser','sfAdminUI','sfHouseholdUI','sfOpenAccount','sfSignupUI','Administrator']
+account_features=['indexedDB.open','createUser','sfAdminUI','sfHouseholdUI','sfOpenAccount','sfSignupUI','Administrator']
 missing=[x for x in account_features if x not in auth_text]
 if missing: raise SystemExit('Missing account-layer feature(s): '+', '.join(missing))
-runtime_features=['data-action=\\"prev\\"','data-action=\\"next\\"','data-action=\\"run\\"','PROMPTS=','sfTaskDelete','sfAddHouseholdDevice','sfHouseholdDetail','sfRecordReading','__smartFlowRuntimeReady']
+runtime_features=['PROMPTS=','sfTaskDelete','sfAddHouseholdDevice','sfHouseholdDetail','sfRecordReading','__smartFlowRuntimeReady','function renderAll','runScenario']
 missing=[x for x in runtime_features if x not in runtime_text]
 if missing: raise SystemExit('Missing runtime feature(s): '+', '.join(missing))
 if re.findall(r'<script[^>]+src=[\"\']https?://',text,re.I) or re.findall(r'<link[^>]+href=[\"\']https?://',text,re.I): raise SystemExit('Offline APK contains remote dependencies')
