@@ -13,10 +13,12 @@ jobs:
       - name: Synchronize shared web assets into Android package
         run: |
           cp index.html android/app/src/main/assets/index.html
+          cp app.js android/app/src/main/assets/app.js
           cp auth-admin.js android/app/src/main/assets/auth-admin.js
           cp smartflow-runtime.js android/app/src/main/assets/smartflow-runtime.js
           cp local-core.js android/app/src/main/assets/local-core.js
           cp upgrade.js android/app/src/main/assets/upgrade.js
+          cp local-auth-compat.js android/app/src/main/assets/local-auth-compat.js
           cp icon.svg android/app/src/main/assets/icon.svg
           cp manifest.webmanifest android/app/src/main/assets/manifest.webmanifest
           python3 - <<'PY'
@@ -25,6 +27,8 @@ jobs:
           t=p.read_text(encoding='utf-8')
           if './upgrade.js' not in t:
               t=t.replace('</body>','<script src="./upgrade.js"></script></body>')
+          if './local-auth-compat.js' not in t:
+              t=t.replace('</body>','<script src="./local-auth-compat.js"></script></body>')
           p.write_text(t,encoding='utf-8')
           PY
       - name: Validate JavaScript runtime
@@ -34,14 +38,19 @@ jobs:
           node --check smartflow-runtime.js
           node --check local-core.js
           node --check upgrade.js
+          node --check local-auth-compat.js
       - name: Verify synchronized Android assets
         run: |
+          cmp app.js android/app/src/main/assets/app.js
           cmp auth-admin.js android/app/src/main/assets/auth-admin.js
           cmp smartflow-runtime.js android/app/src/main/assets/smartflow-runtime.js
           cmp local-core.js android/app/src/main/assets/local-core.js
           cmp upgrade.js android/app/src/main/assets/upgrade.js
+          cmp local-auth-compat.js android/app/src/main/assets/local-auth-compat.js
           cmp icon.svg android/app/src/main/assets/icon.svg
           grep -q 'upgrade.js' android/app/src/main/assets/index.html
+          grep -q 'local-auth-compat.js' android/app/src/main/assets/index.html
+          test -s android/app/src/main/assets/app.js
           test -s android/app/src/main/assets/icon.svg
       - name: Smoke test offline Smart Flow demo
         run: python3 scripts/smoke_test.py
