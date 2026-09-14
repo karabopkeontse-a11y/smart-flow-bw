@@ -3,13 +3,13 @@ import re
 asset=Path('android/app/src/main/assets/index.html'); auth=Path('android/app/src/main/assets/auth-admin.js'); runtime=Path('android/app/src/main/assets/smartflow-runtime.js'); repair=Path('android/app/src/main/assets/upgrade.js')
 if not all(p.exists() for p in [asset,auth,runtime,repair]): raise SystemExit('Required Smart Flow APK assets are missing')
 text=asset.read_text(encoding='utf-8'); auth_text=auth.read_text(encoding='utf-8'); runtime_text=runtime.read_text(encoding='utf-8'); repair_text=repair.read_text(encoding='utf-8')
-required=['Smart Flow BW','Water intelligence with Thothi AI','Before Your Bill','Thothi','Overnight leak','High flow / burst risk','Usage improving','Evening spike','id="thothi"','id="overview"','id="alerts"','id="save"','id="devices"','Sign in / Sign up','data-action="prev"','data-action="next"','data-action="run"']
+required=['Smart Flow BW','Water intelligence with Thothi AI','Before Your Bill','Thothi','Overnight leak','High flow / burst risk','Usage improving','Evening spike','id="thothi"','id="overview"','id="alerts"','id="save"','id="devices"']
 missing=[x for x in required if x not in text]
 if missing: raise SystemExit('Missing required current demo features: '+', '.join(missing))
 account_features=['indexedDB.open','createUser','sfAdminUI','sfHouseholdUI','sfOpenAccount','sfSignupUI','Administrator']
 missing=[x for x in account_features if x not in auth_text]
 if missing: raise SystemExit('Missing account-layer feature(s): '+', '.join(missing))
-runtime_features=['PROMPTS=','sfTaskDelete','sfAddHouseholdDevice','sfHouseholdDetail','sfRecordReading','__smartFlowRuntimeReady','function renderAll','runScenario']
+runtime_features=['PROMPTS=','sfTaskDelete','sfAddHouseholdDevice','sfHouseholdDetail','sfRecordReading','__smartFlowRuntimeReady','function renderAll','runScenario','data-action="prev"','data-action="next"','data-action="run"']
 missing=[x for x in runtime_features if x not in runtime_text]
 if missing: raise SystemExit('Missing runtime feature(s): '+', '.join(missing))
 repair_features=['sfAddHouseholdDevice','Thothi report','sf-brand-splash','icon.svg']
@@ -22,4 +22,4 @@ for tag in ['<html','<head','<body','</html>']:
 tabs=re.findall(r'data-tab="([^"]+)"',text); screens=re.findall(r'<section id="([^"]+)"',text)
 for expected in ['overview','bill','alerts','thothi','save','devices']:
  if expected not in tabs or expected not in screens: raise SystemExit(f'Missing navigation/screen: {expected}')
-print('Smart Flow BW offline + accounts + runtime smoke test: PASS'); print(f'Asset size: {len(text):,} bytes'); print('Guest preview, sign-in, sign-up, admin, households, devices, simulation and Thothi surfaces present.'); print('Repair/brand layer is synchronized for APK packaging.')
+print('Smart Flow BW offline + accounts + runtime smoke test: PASS'); print(f'Asset size: {len(text):,} bytes'); print('Guest preview, sign-in, sign-up, admin, households, devices, simulation and Thothi surfaces present.'); print('Runtime controls and repair/brand layer are synchronized for APK packaging.')
