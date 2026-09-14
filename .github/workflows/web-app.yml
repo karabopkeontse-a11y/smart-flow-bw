@@ -17,6 +17,7 @@ jobs:
           node --check local-core.js
           node --check auth-admin.js
           node --check smartflow-runtime.js
+          node --check upgrade.js
       - name: Validate Smart Flow navigation and runtime
         run: |
           python3 - <<'PY'
@@ -36,16 +37,23 @@ jobs:
         run: |
           rm -rf site
           mkdir -p site
-          cp index.html app.js local-core.js auth-admin.js smartflow-runtime.js manifest.webmanifest icon.svg site/
+          cp index.html app.js local-core.js auth-admin.js smartflow-runtime.js upgrade.js manifest.webmanifest icon.svg site/
           if [ -f sw.js ]; then cp sw.js site/; fi
           if [ -f service-worker.js ]; then cp service-worker.js site/; fi
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('site/index.html')
+          t=p.read_text(encoding='utf-8')
+          if './upgrade.js' not in t:
+              t=t.replace('</body>','<script src="./upgrade.js"></script></body>')
+          p.write_text(t,encoding='utf-8')
+          PY
           test -s site/index.html
           test -s site/smartflow-runtime.js
           test -s site/auth-admin.js
-          cat > site/README.txt <<'EOF'
-          Smart Flow BW — Web App
-          Open index.html in a modern browser. This is the synchronized Smart Flow BW demo with Thothi, simulation, alerts, saving actions, accounts and device/household features.
-          EOF
+          test -s site/upgrade.js
+          test -s site/icon.svg
+          grep -q 'upgrade.js' site/index.html
       - name: Create verified web ZIP
         run: |
           cd site
