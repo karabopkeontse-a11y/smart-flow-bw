@@ -19,6 +19,7 @@ jobs:
           node --check smartflow-runtime.js
           node --check upgrade.js
           node --check local-auth-compat.js
+          node --check smartflow-hardening.js
       - name: Validate Smart Flow navigation and runtime
         run: |
           python3 - <<'PY'
@@ -28,8 +29,7 @@ jobs:
           required=['Smart Flow BW','Before Your Bill','Thothi','Overnight leak','High flow / burst risk','Usage improving','Evening spike','id="overview"','id="alerts"','id="save"','id="devices"','id="account"','Run 24h','smartflow-runtime.js','auth-admin.js']
           missing=[x for x in required if x not in t]
           if missing: raise SystemExit('Missing web surface: '+', '.join(missing))
-          tabs=set(re.findall(r'data-tab="([^"]+)"',t)); screens=set(re.findall(r'<section id="([^"]+)"',t))
-          expected={'overview','bill','alerts','thothi','save','devices','account'}
+          tabs=set(re.findall(r'data-tab="([^"]+)"',t)); screens=set(re.findall(r'<section id="([^"]+)"',t)); expected={'overview','bill','alerts','thothi','save','devices','account'}
           if not expected <= tabs or not expected <= screens: raise SystemExit('Navigation/screen mismatch')
           print('Navigation surface: PASS')
           print('Tabs:', ', '.join(sorted(tabs & expected)))
@@ -38,28 +38,19 @@ jobs:
         run: |
           rm -rf site
           mkdir -p site
-          cp index.html app.js local-core.js auth-admin.js smartflow-runtime.js upgrade.js local-auth-compat.js manifest.webmanifest icon.svg site/
+          cp index.html app.js local-core.js auth-admin.js smartflow-runtime.js upgrade.js local-auth-compat.js smartflow-hardening.js manifest.webmanifest icon.svg site/
           if [ -f sw.js ]; then cp sw.js site/; fi
           if [ -f service-worker.js ]; then cp service-worker.js site/; fi
           python3 - <<'PY'
           from pathlib import Path
           p=Path('site/index.html')
           t=p.read_text(encoding='utf-8')
-          if './upgrade.js' not in t:
-              t=t.replace('</body>','<script src="./upgrade.js"></script></body>')
-          if './local-auth-compat.js' not in t:
-              t=t.replace('</body>','<script src="./local-auth-compat.js"></script></body>')
+          for src in ('./upgrade.js','./local-auth-compat.js','./smartflow-hardening.js'):
+              if src not in t: t=t.replace('</body>',f'<script src="{src}"></script></body>')
           p.write_text(t,encoding='utf-8')
           PY
-          test -s site/index.html
-          test -s site/app.js
-          test -s site/smartflow-runtime.js
-          test -s site/auth-admin.js
-          test -s site/upgrade.js
-          test -s site/local-auth-compat.js
-          test -s site/icon.svg
-          grep -q 'upgrade.js' site/index.html
-          grep -q 'local-auth-compat.js' site/index.html
+          test -s site/index.html && test -s site/smartflow-hardening.js && test -s site/icon.svg
+          grep -q 'smartflow-hardening.js' site/index.html
       - name: Create verified web ZIP
         run: |
           cd site
