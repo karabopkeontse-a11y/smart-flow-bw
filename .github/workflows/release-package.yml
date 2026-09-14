@@ -15,13 +15,22 @@ jobs:
       - name: Sync Android assets from web source of truth
         run: |
           mkdir -p android/app/src/main/assets
-          cp index.html auth-admin.js smartflow-runtime.js local-core.js android/app/src/main/assets/
+          cp index.html auth-admin.js smartflow-runtime.js local-core.js upgrade.js icon.svg manifest.webmanifest android/app/src/main/assets/
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('android/app/src/main/assets/index.html')
+          t=p.read_text(encoding='utf-8')
+          if './upgrade.js' not in t:
+              t=t.replace('</body>','<script src="./upgrade.js"></script></body>')
+          p.write_text(t,encoding='utf-8')
+          PY
       - name: Validate JavaScript
         run: |
           node --check app.js
           node --check auth-admin.js
           node --check smartflow-runtime.js
           node --check local-core.js
+          node --check upgrade.js
       - name: Static feature smoke test
         run: python3 scripts/smoke_test.py
       - name: Install Playwright and Chromium
@@ -45,13 +54,22 @@ jobs:
         run: |
           rm -rf release-web
           mkdir -p release-web
-          cp index.html auth-admin.js smartflow-runtime.js local-core.js manifest.webmanifest icon.svg sw.js release-web/
+          cp index.html auth-admin.js smartflow-runtime.js local-core.js upgrade.js manifest.webmanifest icon.svg sw.js release-web/
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('release-web/index.html')
+          t=p.read_text(encoding='utf-8')
+          if './upgrade.js' not in t:
+              t=t.replace('</body>','<script src="./upgrade.js"></script></body>')
+          p.write_text(t,encoding='utf-8')
+          PY
           cat > release-web/README.txt <<'EOF'
           Smart Flow BW — deployable offline web/PWA prototype
-          Open index.html in a modern browser or serve this folder from a static host. The package contains synchronized Thothi intelligence, simulation, alerts, Save Water actions, accounts, households, devices and readings.
+          The package contains synchronized Thothi intelligence, simulation, alerts, Save Water actions, accounts, households, devices, readings and the Smart Flow brand layer.
           EOF
           cd release-web
           zip -9 ../Smart-Flow-BW-Deployable-Web.zip *
+          unzip -t ../Smart-Flow-BW-Deployable-Web.zip
       - name: Package APK
         run: |
           mkdir -p release
@@ -65,10 +83,5 @@ jobs:
         with:
           name: Smart-Flow-BW-Deployable-Release
           path: release/
+          if-no-files-found: error
           retention-days: 30
-      - name: Persist hardened source and Android synchronization
-        run: |
-          git config user.name 'smart-flow-release-bot'
-          git config user.email 'actions@users.noreply.github.com'
-          git add index.html auth-admin.js smartflow-runtime.js local-core.js sw.js android/app/src/main/assets/ scripts/
-          if git diff --cached --quiet; then echo 'Source already hardened and synchronized.'; else git commit -m 'Persist deployable Smart Flow release hardening [skip ci]'; git push; fi
