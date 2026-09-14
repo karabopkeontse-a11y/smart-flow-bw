@@ -18,6 +18,7 @@ jobs:
           node --check auth-admin.js
           node --check smartflow-runtime.js
           node --check upgrade.js
+          node --check local-auth-compat.js
       - name: Validate Smart Flow navigation and runtime
         run: |
           python3 - <<'PY'
@@ -37,7 +38,7 @@ jobs:
         run: |
           rm -rf site
           mkdir -p site
-          cp index.html app.js local-core.js auth-admin.js smartflow-runtime.js upgrade.js manifest.webmanifest icon.svg site/
+          cp index.html app.js local-core.js auth-admin.js smartflow-runtime.js upgrade.js local-auth-compat.js manifest.webmanifest icon.svg site/
           if [ -f sw.js ]; then cp sw.js site/; fi
           if [ -f service-worker.js ]; then cp service-worker.js site/; fi
           python3 - <<'PY'
@@ -46,14 +47,19 @@ jobs:
           t=p.read_text(encoding='utf-8')
           if './upgrade.js' not in t:
               t=t.replace('</body>','<script src="./upgrade.js"></script></body>')
+          if './local-auth-compat.js' not in t:
+              t=t.replace('</body>','<script src="./local-auth-compat.js"></script></body>')
           p.write_text(t,encoding='utf-8')
           PY
           test -s site/index.html
+          test -s site/app.js
           test -s site/smartflow-runtime.js
           test -s site/auth-admin.js
           test -s site/upgrade.js
+          test -s site/local-auth-compat.js
           test -s site/icon.svg
           grep -q 'upgrade.js' site/index.html
+          grep -q 'local-auth-compat.js' site/index.html
       - name: Create verified web ZIP
         run: |
           cd site
