@@ -4,30 +4,19 @@
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 function injectBrand(){
- const s=document.createElement('style');s.textContent=`
- .sf-brand-splash{width:min(280px,64vw);aspect-ratio:1;object-fit:contain;border-radius:24px;filter:drop-shadow(0 24px 40px #00131f66);animation:sfBrandFloat 2s ease-in-out infinite}
- .sf-brand-mark{width:44px;height:44px;object-fit:contain;border-radius:12px;box-shadow:0 8px 24px #00131f44;animation:sfBrandPulse 2.4s ease-in-out infinite}
- .sf-brand-card{display:flex;justify-content:center;align-items:center;margin:8px 0 14px}
- .sf-report{border-left:4px solid #0877d1;background:#eaf7fb;padding:11px 12px;border-radius:12px;margin:8px 0;font-size:12px;line-height:1.45}.sf-report strong{display:block;margin-bottom:3px}
- @keyframes sfBrandFloat{50%{transform:translateY(-10px) rotate(1deg) scale(1.02)}}@keyframes sfBrandPulse{50%{transform:scale(1.05)}}
- @media(prefers-reduced-motion:reduce){.sf-brand-splash,.sf-brand-mark{animation:none}}
- `;document.head.appendChild(s);
- const splash=$('splash'),old=splash?.querySelector('.drop');
- if(old&&!old.dataset.brandified){old.dataset.brandified='1';old.outerHTML='<div class="sf-brand-card"><img class="sf-brand-splash" src="./icon.svg" alt="Smart Flow BW logo"></div>'}
+ const s=document.createElement('style');s.textContent=`.sf-brand-splash{width:min(280px,64vw);aspect-ratio:1;object-fit:contain;border-radius:24px;filter:drop-shadow(0 24px 40px #00131f66);animation:sfBrandFloat 2s ease-in-out infinite}.sf-brand-mark{width:44px;height:44px;object-fit:contain;border-radius:12px;box-shadow:0 8px 24px #00131f44;animation:sfBrandPulse 2.4s ease-in-out infinite}.sf-brand-card{display:flex;justify-content:center;align-items:center;margin:8px 0 14px}.sf-report{border-left:4px solid #0877d1;background:#eaf7fb;padding:11px 12px;border-radius:12px;margin:8px 0;font-size:12px;line-height:1.45}.sf-report strong{display:block;margin-bottom:3px}@keyframes sfBrandFloat{50%{transform:translateY(-10px) rotate(1deg) scale(1.02)}}@keyframes sfBrandPulse{50%{transform:scale(1.05)}}@media(prefers-reduced-motion:reduce){.sf-brand-splash,.sf-brand-mark{animation:none}}`;document.head.appendChild(s);
+ const splash=$('splash'),old=splash?.querySelector('.drop');if(old&&!old.dataset.brandified){old.dataset.brandified='1';old.outerHTML='<div class="sf-brand-card"><img class="sf-brand-splash" src="./icon.svg" alt="Smart Flow BW logo"></div>'}
  document.querySelectorAll('.brandmark').forEach(x=>{if(x.querySelector('.sf-brand-mark'))return;x.innerHTML='';x.style.background='none';const i=document.createElement('img');i.src='./icon.svg';i.alt='Smart Flow BW';i.className='sf-brand-mark';x.appendChild(i)})
 }
 function bridgeDevices(){
- const p=$('devicesPanel');if(p&&!$('sfDevicePanel'))p.id='sfDevicePanel';
+ const p=$('devicesPanel');if(p&&!$('sfDevicePanel')){const child=document.createElement('div');child.id='sfDevicePanel';p.innerHTML='';p.appendChild(child)}
  if(window.sfAddHouseholdDevice)window.addDevice=window.sfAddHouseholdDevice;
+ if(window.renderDevices)window.renderDevices=()=>window.dispatchEvent(new Event('sf-auth-changed'));
  window.dispatchEvent(new Event('sf-auth-changed'));
 }
-function bridgeQuestions(){
- const p=$('prompts');if(p)p.querySelectorAll('button').forEach(b=>{if(b.dataset.sfBound)return;b.dataset.sfBound='1';b.addEventListener('click',()=>{const q=b.dataset.q||b.textContent.trim();if(window.ask)window.ask(q);else window.sfAsk?.(q)})});
- const s=$('suggestions');if(s)s.querySelectorAll('button').forEach(b=>{if(b.dataset.sfBound)return;b.dataset.sfBound='1';b.addEventListener('click',()=>window.sfAsk?.(b.dataset.prompt||b.textContent.trim()))})
-}
+function bridgeQuestions(){const p=$('prompts');if(p)p.querySelectorAll('button').forEach(b=>{if(b.dataset.sfBound)return;b.dataset.sfBound='1';b.addEventListener('click',()=>{const q=b.dataset.q||b.textContent.trim();if(window.ask)window.ask(q);else window.sfAsk?.(q)})});const s=$('suggestions');if(s)s.querySelectorAll('button').forEach(b=>{if(b.dataset.sfBound)return;b.dataset.sfBound='1';b.addEventListener('click',()=>window.sfAsk?.(b.dataset.prompt||b.textContent.trim()))})}
 function report(){const sc=$('scenario')?.value||'normal';const raw=($('hour')?.textContent||$('timeLabel')?.textContent||'12:00').slice(0,2);const h=Number(raw)||12;const flow={normal:.35,overnight:.90,high:6.15,improving:.22,spike:2.85}[sc]??.35;const label={normal:'normal household conditions',overnight:'an overnight leak pattern',high:'high flow / burst risk',improving:'improving usage',spike:'an evening usage spike'}[sc]||sc;const advice={normal:'No anomaly is active. Continue normal use and let Smart Flow monitor the household.',overnight:'Check toilets, dripping taps, outdoor lines and exposed pipes for continuous flow.',high:'Check the meter area and visible pipes. If a real burst is suspected, stop the supply safely and seek assistance.',improving:'Keep the saving actions going and compare the next reading.',spike:'Review showers, laundry, irrigation and other high-use activities during this period.'}[sc];return{key:sc+'-'+h,text:`At ${String(h).padStart(2,'0')}:00, I detected ${label}. Current simulated flow is about ${flow.toFixed(2)} L/min. ${advice}`}}
 function postReport(force){const c=$('chat');if(!c)return;const r=report();if(!force&&c.dataset.sfReportKey===r.key)return;c.dataset.sfReportKey=r.key;const d=document.createElement('div');d.className='msg t sf-report';d.innerHTML='<strong>Thothi report · live state</strong>'+esc(r.text);c.appendChild(d);c.scrollTop=c.scrollHeight}
 function wire(){injectBrand();bridgeDevices();bridgeQuestions();const sel=$('scenario');if(sel&&!sel.dataset.sfRepair){sel.dataset.sfRepair='1';sel.addEventListener('change',()=>setTimeout(()=>{bridgeDevices();bridgeQuestions();postReport(true)},100),true)}document.querySelectorAll('[data-tab="thothi"]').forEach(b=>{if(b.dataset.sfThothi)return;b.dataset.sfThothi='1';b.addEventListener('click',()=>setTimeout(()=>postReport(false),120))});document.querySelectorAll('[onclick*="thothi"]').forEach(b=>{if(b.dataset.sfThothi)return;b.dataset.sfThothi='1';b.addEventListener('click',()=>setTimeout(()=>postReport(false),120))});setTimeout(()=>postReport(false),300)}
-if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',wire,{once:true});else wire();
-setTimeout(wire,700);setTimeout(wire,1600);
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',wire,{once:true});else wire();setTimeout(wire,700);setTimeout(wire,1600);
 })();
