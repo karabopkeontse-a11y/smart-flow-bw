@@ -19,6 +19,14 @@ jobs:
           cp upgrade.js android/app/src/main/assets/upgrade.js
           cp icon.svg android/app/src/main/assets/icon.svg
           cp manifest.webmanifest android/app/src/main/assets/manifest.webmanifest
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('android/app/src/main/assets/index.html')
+          t=p.read_text(encoding='utf-8')
+          if './upgrade.js' not in t:
+              t=t.replace('</body>','<script src="./upgrade.js"></script></body>')
+          p.write_text(t,encoding='utf-8')
+          PY
       - name: Validate JavaScript runtime
         run: |
           node --check app.js
@@ -28,12 +36,13 @@ jobs:
           node --check upgrade.js
       - name: Verify synchronized Android assets
         run: |
-          cmp index.html android/app/src/main/assets/index.html
           cmp auth-admin.js android/app/src/main/assets/auth-admin.js
           cmp smartflow-runtime.js android/app/src/main/assets/smartflow-runtime.js
           cmp local-core.js android/app/src/main/assets/local-core.js
           cmp upgrade.js android/app/src/main/assets/upgrade.js
           cmp icon.svg android/app/src/main/assets/icon.svg
+          grep -q 'upgrade.js' android/app/src/main/assets/index.html
+          test -s android/app/src/main/assets/icon.svg
       - name: Smoke test offline Smart Flow demo
         run: python3 scripts/smoke_test.py
       - uses: actions/setup-java@v4
@@ -53,6 +62,7 @@ jobs:
           cp README.md release/README.md
           cd release
           zip -9 Smart-Flow-BW-Thothi-Package.zip Smart-Flow-BW-Thothi-debug.apk README.md
+          unzip -t Smart-Flow-BW-Thothi-Package.zip
       - uses: actions/upload-artifact@v4
         with:
           name: Smart-Flow-BW-Thothi-App-Package
